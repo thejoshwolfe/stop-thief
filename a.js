@@ -101,6 +101,7 @@ function indexToAdjacentIndexes(index) {
 const indexToRoom = [];
 const roomToIndexes = [];
 const thiefRoomToAdjacentThiefRooms = [];
+const roomToDoorwayOrientation = [];
 function computeMapLayout() {
   for (let r = 0; r < boardSize; r++) {
     for (let c = 0; c < boardSize; c++) {
@@ -129,6 +130,7 @@ function computeMapLayout() {
       }
     }
   }
+
   for (let startingRoom = 0; startingRoom < roomToIndexes.length; startingRoom++) {
     if (!isThiefRoom(startingRoom)) continue;
     let adjacentThiefRooms = thiefRoomToAdjacentThiefRooms[startingRoom] = [];
@@ -148,6 +150,18 @@ function computeMapLayout() {
     }
     if (adjacentThiefRooms.length < 2) throw new Error();
   }
+
+  for (let i = 0; i < gameBoardString.length; i++) {
+    if (!(gameBoardString[i] === "D" || gameBoardString[i] === "W")) continue;
+    if (gameBoardString[i - boardSize] !== " ") {
+      roomToDoorwayOrientation[i] = "v";
+    } else if (gameBoardString[i + 1] !== " ") {
+      roomToDoorwayOrientation[i] = "h";
+    } else {
+      // 3-44
+      roomToDoorwayOrientation[i] = "d";
+    }
+  }
 }
 function roomToAdjacentRooms(room) {
   let indexes = roomToIndexes[room];
@@ -160,7 +174,6 @@ function roomToAdjacentRooms(room) {
       addToArraySet(adjacentRooms, otherRoom);
     }
   }
-  // TODO: subway
   return adjacentRooms;
 }
 function isThiefRoom(room) {
@@ -181,11 +194,29 @@ clueButton.addEventListener("click", function() {
     removeFromArray(remainingLoot, startingRoom);
   } else {
     // move
+    let currentRoom = movementHistory[movementHistory.length - 1];
+    let previousRoom = movementHistory[movementHistory.length - 2];
+    let orientation = roomToDoorwayOrientation[currentRoom];
+    let doorwayAllows = (room) => true;
+    if (orientation != null) {
+      let {r, c} = toCoord(currentRoom);
+      switch (orientation) {
+        case "v":
+          doorwayAllows = (room) => Math.sign(toCoord(room).r - r) === Math.sign(r - toCoord(previousRoom).r);
+          break;
+        case "h":
+          doorwayAllows = (room) => Math.sign(toCoord(room).c - c) === Math.sign(c - toCoord(previousRoom).c);
+          break;
+        case "d":
+          doorwayAllows = (room) => Math.sign(toCoord(room).r - (r - 1)) === Math.sign((r - 1) - toCoord(previousRoom).r);
+          break;
+      }
+    }
     let possibleMoves = [];
     let possibleCrimes = [];
-    for (let room of thiefRoomToAdjacentThiefRooms[movementHistory[movementHistory.length - 1]]) {
-      // TODO: all the way through doors and windows
-      if (room === movementHistory[movementHistory.length - 2]) continue; // no U-turns
+    for (let room of thiefRoomToAdjacentThiefRooms[currentRoom]) {
+      if (room === previousRoom) continue; // no U-turns
+      if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
       if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
         possibleCrimes.push(room);
@@ -252,6 +283,27 @@ function renderMap() {
       context.beginPath();
       context.arc(x, y, tileSize / 5, 0, Math.PI*2);
       context.fill();
+      let orientation = roomToDoorwayOrientation[thiefRoom];
+      switch (orientation) {
+        case "v":
+          context.beginPath();
+          context.moveTo(x - tileSize, y);
+          context.lineTo(x + tileSize, y);
+          context.stroke();
+          break;
+        case "h":
+          context.beginPath();
+          context.moveTo(x, y - tileSize);
+          context.lineTo(x, y + tileSize);
+          context.stroke();
+          break;
+        case "d":
+          context.beginPath();
+          context.moveTo(x - tileSize, y - tileSize);
+          context.lineTo(x + tileSize, y + tileSize);
+          context.stroke();
+          break;
+      }
       for (let otherRoom of adjacentThiefRooms) {
         if (otherRoom < thiefRoom) continue; // already drawn
         context.beginPath();
