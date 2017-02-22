@@ -168,13 +168,39 @@ function isThiefRoom(room) {
   return ch != null && ch !== ch.toLowerCase();
 }
 
-var currentThiefRoom = null;
+var movementHistory = [];
+var remainingLoot = [];
 clueButton.addEventListener("click", function() {
-  var possibleStartingRooms = [];
-  for (let room = 0; room < gameBoardString.length; room++) {
-    if (gameBoardString[room] === "C") possibleStartingRooms.push(room);
+  if (movementHistory.length === 0) {
+    // start
+    for (let room = 0; room < gameBoardString.length; room++) {
+      if (gameBoardString[room] === "C") remainingLoot.push(room);
+    }
+    let startingRoom = randomArrayItem(remainingLoot);
+    movementHistory.push(startingRoom);
+    removeFromArray(remainingLoot, startingRoom);
+  } else {
+    // move
+    let possibleMoves = [];
+    let possibleCrimes = [];
+    for (let room of thiefRoomToAdjacentThiefRooms[movementHistory[movementHistory.length - 1]]) {
+      // TODO: all the way through doors and windows
+      if (room === movementHistory[movementHistory.length - 2]) continue; // no U-turns
+      possibleMoves.push(room);
+      if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
+        possibleCrimes.push(room);
+      }
+    }
+    if (possibleCrimes.length > 0) {
+      // gotta steal
+      var room = randomArrayItem(possibleCrimes);
+      movementHistory.push(room);
+      removeFromArray(remainingLoot, room);
+    } else {
+      // normal movement
+      movementHistory.push(randomArrayItem(possibleMoves));
+    }
   }
-  currentThiefRoom = randomArrayItem(possibleStartingRooms);
   renderMap();
 });
 
@@ -222,7 +248,6 @@ function renderMap() {
     for (let thiefRoom = 0; thiefRoom < thiefRoomToAdjacentThiefRooms.length; thiefRoom++) {
       let adjacentThiefRooms = thiefRoomToAdjacentThiefRooms[thiefRoom];
       if (adjacentThiefRooms == null) continue;
-      // TODO: centered in large rooms
       let {x, y} = getCenterOfRoom(thiefRoom);
       context.beginPath();
       context.arc(x, y, tileSize / 5, 0, Math.PI*2);
@@ -238,13 +263,28 @@ function renderMap() {
     }
   }
 
-  if (showThiefMovement && currentThiefRoom != null) {
-    context.strokeStyle = "red";
-    context.lineWidth = tileSize / 6;
-    context.beginPath();
-    let {x, y} = getCenterOfRoom(currentThiefRoom);
-    context.arc(x, y, Math.sqrt(1/2) * tileSize, 0, Math.PI*2);
-    context.stroke();
+  if (showThiefMovement) {
+    if (movementHistory.length > 0) {
+      context.fillStyle = context.strokeStyle = "#f3a6ff";
+      context.lineWidth = tileSize / 10;
+      for (let i = 0; i < movementHistory.length - 1; i++) {
+        let {x, y} = getCenterOfRoom(movementHistory[i]);
+        context.beginPath();
+        context.arc(x, y, tileSize / 5, 0, Math.PI*2);
+        context.fill();
+        let otherRoom = movementHistory[i + 1];
+        context.beginPath();
+        context.moveTo(x, y);
+        let {x:other_x, y:other_y} = getCenterOfRoom(otherRoom);
+        context.lineTo(other_x, other_y);
+        context.stroke();
+      }
+      context.lineWidth = tileSize / 6;
+      context.beginPath();
+      let {x, y} = getCenterOfRoom(movementHistory[movementHistory.length - 1]);
+      context.arc(x, y, Math.sqrt(1/2) * tileSize, 0, Math.PI*2);
+      context.stroke();
+    }
   }
 }
 function getCenterOfRoom(room) {
@@ -270,6 +310,11 @@ function coordToSpan(r, c) {
 function addToArraySet(array, item) {
   if (array.indexOf(item) !== -1) return;
   array.push(item);
+}
+function removeFromArray(array, item) {
+  var index = array.indexOf(item);
+  if (index === -1) throw new Error();
+  array.splice(index, 1);
 }
 function randomArrayItem(array) {
   if (array.length === 0) throw new Error();
