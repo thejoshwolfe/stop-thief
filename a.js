@@ -83,6 +83,7 @@ const gameBoardString = "" +
 "                              ^       " +
 "";
 const boardSize = 38;
+const newsStand = 1348;
 if (gameBoardString.length !== boardSize * boardSize) throw new Error();
 function toIndex(r, c) {
   return r * boardSize + c;
@@ -95,9 +96,8 @@ const adjacentIndexOffsets = [
   -1,                         1,
   -1 + boardSize,  boardSize, 1 + boardSize,
 ];
-function indexToAdjacentIndexes(index) {
-  // out of bounds? not a problem on our board, lol.
-  return adjacentIndexOffsets.map(offset => index + offset);
+function isIndoor(room) {
+  return !(gameBoardString[room].toUpperCase() === "S" || room === newsStand);
 }
 
 const indexToRoom = [];
@@ -136,6 +136,7 @@ function computeMapLayout() {
   for (let startingRoom = 0; startingRoom < roomToIndexes.length; startingRoom++) {
     if (!isThiefRoom(startingRoom)) continue;
     let adjacentThiefRooms = thiefRoomToAdjacentThiefRooms[startingRoom] = [];
+    let startingIndoor = isIndoor(startingRoom);
     let reachableRooms = roomToAdjacentRooms(startingRoom);
     let oneSpaceAway = reachableRooms.length;
     for (let i = 0; i < reachableRooms.length; i++) {
@@ -145,7 +146,9 @@ function computeMapLayout() {
         adjacentThiefRooms.push(room);
       } else if (i < oneSpaceAway) {
         // keep moving
+        let intermediateIndoor = isIndoor(room);
         for (let otherRoom of roomToAdjacentRooms(room)) {
+          if (startingIndoor && !intermediateIndoor && isIndoor(otherRoom)) continue; // can't jump over the street
           addToArraySet(reachableRooms, otherRoom);
         }
       }
@@ -170,9 +173,9 @@ function roomToAdjacentRooms(room) {
   if (indexes == null) return [];
   let adjacentRooms = [];
   for (let index of indexes) {
-    for (let adjacentIndex of indexToAdjacentIndexes(index)) {
+    for (let adjacentIndex of adjacentIndexOffsets.map(offset => index + offset)) {
       let otherRoom = indexToRoom[adjacentIndex];
-      if (otherRoom === room) continue;
+      if (otherRoom == null || otherRoom === -1 || otherRoom === room) continue;
       addToArraySet(adjacentRooms, otherRoom);
     }
   }
