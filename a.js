@@ -2,6 +2,8 @@ const mapCanvas = document.getElementById("mapCanvas");
 const showMovementGraphCheckbox = document.getElementById("showMovementGraphCheckbox");
 const showThiefMovementCheckbox = document.getElementById("showThiefMovementCheckbox");
 const clueButton = document.getElementById("clueButton");
+const currentMoveDiv = document.getElementById("currentMoveDiv");
+const historyUl = document.getElementById("historyUl");
 const showMovementRulesButton = document.getElementById("showMovementRulesButton");
 const movementRulesDiv = document.getElementById("movementRulesDiv");
 const showProbabilitiesButton = document.getElementById("showProbabilitiesButton");
@@ -61,7 +63,7 @@ const gameBoardString = "" +
 "ss<  D     D    ss<<<s  D   W   W  s  " +
 "sS<sS<s<S<s<S<sS^S<<<^SsS<s<S<s<S<sS  " +
 "^^<^^<^<^<^<^<^^^^<<<^^^^<^<^<^<^<^^  " +
-"  s  W   W   D  ^^<<<^  W   W   W  s  " +
+"  s  W   W   D  ^^<<<^  W   D   W  s  " +
 "  S  ff fff ff  ^^<<<^  ffffff fff S  " +
 "  ^  FfDfCfWfF  s<<<<^   fCfFf fFfDs  " +
 "  s  ff     ff    S<     f  ff fff ^  " +
@@ -183,7 +185,13 @@ function isThiefRoom(room) {
 
 var movementHistory = [];
 var remainingLoot = [];
+var clueHistory = [];
 clueButton.addEventListener("click", function() {
+  makeAMove();
+  renderHistory();
+  renderMap();
+});
+function makeAMove() {
   if (movementHistory.length === 0) {
     // start
     for (let room = 0; room < gameBoardString.length; room++) {
@@ -192,6 +200,7 @@ clueButton.addEventListener("click", function() {
     let startingRoom = randomArrayItem(remainingLoot);
     movementHistory.push(startingRoom);
     removeFromArray(remainingLoot, startingRoom);
+    clueHistory.push("C"); // TODO: building number
   } else {
     // move
     let currentRoom = movementHistory[movementHistory.length - 1];
@@ -219,21 +228,37 @@ clueButton.addEventListener("click", function() {
       if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
       if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
+        // TODO: news stand
         possibleCrimes.push(room);
       }
     }
     if (possibleCrimes.length > 0) {
       // gotta steal
-      var room = randomArrayItem(possibleCrimes);
+      let room = randomArrayItem(possibleCrimes);
       movementHistory.push(room);
       removeFromArray(remainingLoot, room);
+      clueHistory.push("C"); // TODO: building number
     } else {
       // normal movement
-      movementHistory.push(randomArrayItem(possibleMoves));
+      let room = randomArrayItem(possibleMoves);
+      movementHistory.push(room);
+      if (gameBoardString[room] === "C") {
+        clueHistory.push("F"); // TODO: news stand
+      } else {
+        clueHistory.push(gameBoardString[room]);
+      }
     }
   }
-  renderMap();
-});
+}
+
+function renderHistory() {
+  currentMoveDiv.textContent = clueHistory.length > 0 ? clueHistory[clueHistory.length - 1] : "";
+  var historyHtml = "";
+  for (let i = clueHistory.length - 2; i >= 0; i--) {
+    historyHtml += '<li>' + clueHistory[i] + '</li>';
+  }
+  historyUl.innerHTML = historyHtml;
+}
 
 const tileSize = 20;
 function renderMap() {
