@@ -6,6 +6,11 @@ Web app that recreates the behavior of the Electronic Crime Scanner(TM) from the
 
 http://wolfesoftware.com/stop-thief/
 
+# Status
+
+This app is not finished.
+See the app itself for a list of TODOs.
+
 # License
 
 As far as I can tell, the trademarks and copyrights for the original game have expired.
