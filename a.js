@@ -231,7 +231,7 @@ function makeAMove() {
       if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
       if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
-        // TODO: news stand
+        // TODO: don't always steal from the news stand
         possibleCrimes.push(room);
       }
     }
