@@ -190,20 +190,21 @@ var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
 clueButton.addEventListener("click", function() {
-  makeAMove();
+  makeAMove(true);
   renderHistory();
   renderMap();
 });
-function makeAMove() {
+function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
     // start
     for (let room = 0; room < gameBoardString.length; room++) {
+      // TODO: don't start at the news stand
       if (gameBoardString[room] === "C") remainingLoot.push(room);
     }
     let startingRoom = randomArrayItem(remainingLoot);
     movementHistory.push(startingRoom);
     removeFromArray(remainingLoot, startingRoom);
-    clueHistory.push("C"); // TODO: building number
+    clueHistory.push(renderMove(startingRoom, showBuildingNumber));
   } else {
     // move
     let currentRoom = movementHistory[movementHistory.length - 1];
@@ -240,18 +241,109 @@ function makeAMove() {
       let room = randomArrayItem(possibleCrimes);
       movementHistory.push(room);
       removeFromArray(remainingLoot, room);
-      clueHistory.push("C"); // TODO: building number
+      clueHistory.push(renderMove(room, showBuildingNumber));
     } else {
       // normal movement
       let room = randomArrayItem(possibleMoves);
       movementHistory.push(room);
-      if (gameBoardString[room] === "C") {
-        clueHistory.push("F"); // TODO: news stand
-      } else {
-        clueHistory.push(gameBoardString[room]);
-      }
+      clueHistory.push(renderMove(room, showBuildingNumber));
     }
   }
+}
+
+function renderMove(room, showBuildingNumber) {
+  var typeCode = gameBoardString[room];
+  if (typeCode === "C" && remainingLoot.indexOf(room) !== -1) {
+    // this spaces has been robbed.
+    // TODO: news stand turns into street, not floor.
+    typeCode = "F";
+  }
+  var result = (function() {
+    switch (typeCode) {
+      case "S": return "Street";
+      case "F": return "Floor";
+      case "C": return "Crime";
+      case "W": return "Window";
+      case "D": return "Door";
+      default: throw new Error();
+    }
+  })();
+  if (showBuildingNumber) {
+    result += " (" + renderBuildingNumber(getBuildingNumber(room)) + ")";
+  }
+  return result;
+}
+
+function renderBuildingNumber(buildingNumber) {
+  if (1 <= buildingNumber && buildingNumber <= 4) return "Building " + buildingNumber;
+  if (5 <= buildingNumber && buildingNumber <= 8) return buildingNumber + "th St.";
+  throw new Error();
+}
+
+function getBuildingNumber(room) {
+  var exactSpaceNumber = getExactSpaceNumber(room);
+  //console.log(exactSpaceNumber);
+  return exactSpaceNumber[0];
+}
+function getExactSpaceNumber(room) {
+  var y = Math.floor(room / boardSize);
+  var x = room - y * boardSize;
+
+  // Building 4
+  if (3 <= x && x <= 17 &&
+      3 <= y && y <= 17) {
+    return [4, (19 - x) / 2, (19 - y)/ 2];
+  }
+  // Building 1
+  if (20 <= x && x <= 34 &&
+      3 <= y && y <= 17) {
+    return [1, (x - 18) / 2, (19 - y)/ 2];
+  }
+  // Building 3
+  if (3 <= x && x <= 17 &&
+      20 <= y && y <= 34) {
+    return [3, (19 - x) / 2, (y - 18)/ 2];
+  }
+  // Building 2
+  if (20 <= x && x <= 34 &&
+      20 <= y && y <= 34) {
+    if (x === 34 && y === 34) {
+      // this one is in posistion to be 2,8,8, but really it's outside.
+      return [6,9,9];
+    }
+    return [2, (x - 18) / 2, (y - 18)/ 2];
+  }
+  // 8th St
+  if (x < 17 && y < 20) {
+    if (x < 3) x = 0;
+    if (y < 3) y = 0;
+    return [8, Math.floor((18 - x) / 2), Math.floor((18 - y) / 2)];
+  }
+  // 5th St
+  if (18 <= x && y < 17) {
+    if (34 <= x) x = 36;
+    if (y <= 2) y = 0;
+    else if (y <= 5) y = 4;
+    return [5, Math.floor((x - 18) / 2), Math.floor((18 - y) / 2)];
+  }
+  // 7th St
+  if (x <= 18 && 20 <= y) {
+    if (x <= 2) x = 1;
+    if (y <= 23) y = 20;
+    if (34 <= y) y = 36;
+    return [7, Math.floor((19 - x) / 2), Math.floor((y - 18) / 2)];
+  }
+  // 6th St
+  if (21 <= x && 18 <= y) {
+    if (34 <= x) x = 36;
+    if (x <= 22) x = 20;
+    if (34 <= y) y = 36;
+    return [6, Math.floor((x - 18) / 2), Math.floor((y - 18) / 2)];
+  }
+  // center space
+  if (x === 17 && y === 18) return [5,0,0];
+
+  throw new Error();
 }
 
 function renderHistory() {
