@@ -1,48 +1,103 @@
 const mapCanvas = document.getElementById("mapCanvas");
-const showMovementGraphCheckbox = document.getElementById("showMovementGraphCheckbox");
-const showThiefMovementCheckbox = document.getElementById("showThiefMovementCheckbox");
 const tipButton = document.getElementById("tipButton");
 const arrestButton = document.getElementById("arrestButton");
 const clueButton = document.getElementById("clueButton");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
+
+var persistentState = {
+  probabilities: {
+    move: 0.75,
+    comply: 0.5,
+    runFarther: 0.5,
+  },
+  ui: {
+    showMovementGraph: true,
+    showThiefMovement: true,
+    showMovementRules: true,
+    showProbabilities: true,
+  },
+};
+(function loadState() {
+  persistentState = recurse(persistentState, JSON.parse(localStorage["stop-theif"] || "null"));
+  function recurse(state, loadedData) {
+    if (typeof state !== typeof loadedData) return state;
+    if ((state == null) !== (loadedData == null)) return state;
+    if (Array.isArray(state) !== Array.isArray(loadedData)) return state;
+    switch (true) {
+      case Array.isArray(state):
+        return loadedData;
+      case typeof state === "object":
+        for (let k in state) {
+          state[k] = recurse(state[k], loadedData[k]);
+        }
+        return state;
+      case typeof state === "boolean":
+      case typeof state === "number":
+      case typeof state === "string":
+        return loadedData;
+    }
+    throw new Error();
+  }
+})();
+function saveState() {
+  localStorage["stop-theif"] = JSON.stringify(persistentState);
+}
+
+// Show/hide map layers.
+["showMovementGraph", "showThiefMovement"].forEach(propertyName => {
+  let checkbox = document.getElementById(propertyName + "Checkbox");
+  checkbox.checked = persistentState.ui[propertyName];
+  checkbox.addEventListener("change", function() {
+    persistentState.ui[propertyName] = checkbox.checked;
+    saveState();
+    renderMap();
+  });
+});
+
+// Show/hide UI sections.
 const showMovementRulesButton = document.getElementById("showMovementRulesButton");
 const movementRulesDiv = document.getElementById("movementRulesDiv");
-const showProbabilitiesButton = document.getElementById("showProbabilitiesButton");
-const probabilitiesDiv = document.getElementById("probabilitiesDiv");
-
-var showMovementGraph = true;
-showMovementGraphCheckbox.addEventListener("click", function() {
-  setTimeout(function() {
-    showMovementGraph = showMovementGraphCheckbox.checked;
-    renderMap();
-  }, 0);
-});
-var showThiefMovement = true;
-showThiefMovementCheckbox.addEventListener("click", function() {
-  setTimeout(function() {
-    showThiefMovement = showThiefMovementCheckbox.checked;
-    renderMap();
-  }, 0);
-});
-var showMovementRules = true;
 showMovementRulesButton.addEventListener("click", function() {
   setTimeout(function() {
-    showMovementRules = !showMovementRules;
-    maybeShowElement(movementRulesDiv, showMovementRules);
+    persistentState.ui.showMovementRules = !persistentState.ui.showMovementRules;
+    saveState();
+    maybeShowElement(movementRulesDiv, persistentState.ui.showMovementRules);
   }, 0);
 });
-var showProbabilities = true;
+maybeShowElement(movementRulesDiv, persistentState.ui.showMovementRules);
+
+const showProbabilitiesButton = document.getElementById("showProbabilitiesButton");
+const probabilitiesDiv = document.getElementById("probabilitiesDiv");
 showProbabilitiesButton.addEventListener("click", function() {
   setTimeout(function() {
-    showProbabilities = !showProbabilities;
-    maybeShowElement(probabilitiesDiv, showProbabilities);
+    persistentState.ui.showProbabilities = !persistentState.ui.showProbabilities;
+    saveState();
+    maybeShowElement(probabilitiesDiv, persistentState.ui.showProbabilities);
   }, 0);
 });
+maybeShowElement(probabilitiesDiv, persistentState.ui.showProbabilities);
 
 function maybeShowElement(element, showIt) {
   element.style.display = showIt ? "block" : "none";
 }
+
+// Probabilities
+["move", "comply", "runFarther"].forEach(propertyName => {
+  let textbox = document.getElementById(propertyName + "ChanceTextbox");
+  textbox.addEventListener("change", function() {
+    let value = parseFloat(textbox.value);
+    if (isNaN(value)) {
+      value = persistentState.probabilities[propertyName];
+    }
+    if (value < 0) value = 0;
+    if (value > 1) value = 1;
+    persistentState.probabilities[propertyName] = value;
+    saveState();
+    textbox.value = value;
+  });
+  textbox.value = persistentState.probabilities[propertyName];
+})
 
 const gameBoardString = "" +
 "                               s      " +
@@ -218,6 +273,7 @@ arrestButton.addEventListener("click", function() {
   }
 });
 
+// TODO: move all this to persistentState.
 var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
@@ -420,7 +476,7 @@ function renderMap() {
     }
   }
 
-  if (showMovementGraph) {
+  if (persistentState.ui.showMovementGraph) {
     context.fillStyle = "rgba(255,255,255,0.5)";
     context.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
     context.fillStyle = "black";
@@ -466,7 +522,7 @@ function renderMap() {
     }
   }
 
-  if (showThiefMovement) {
+  if (persistentState.ui.showThiefMovement) {
     if (movementHistory.length > 0) {
       context.fillStyle = context.strokeStyle = "#f3a6ff";
       context.lineWidth = tileSize / 10;
