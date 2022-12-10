@@ -285,11 +285,13 @@ clueButton.addEventListener("click", function() {
 function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
     // start
+    let startingRoomOptions = [];
     for (let room = 0; room < gameBoardString.length; room++) {
-      // TODO: don't start at the news stand
-      if (gameBoardString[room] === "C") remainingLoot.push(room);
+      if (gameBoardString[room] !== "C") continue;
+      remainingLoot.push(room);
+      if (room !== newsStand) startingRoomOptions.push(room);
     }
-    let startingRoom = randomArrayItem(remainingLoot);
+    let startingRoom = randomArrayItem(startingRoomOptions);
     movementHistory.push(startingRoom);
     removeFromArray(remainingLoot, startingRoom);
     clueHistory.push(renderMove(startingRoom, showBuildingNumber));
