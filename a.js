@@ -300,10 +300,16 @@ arrestButton.addEventListener("click", function() {
 var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
+var waitTimeHere = 0;
 clueButton.addEventListener("click", function() {
-  makeAMove(true);
+  if (movementHistory.length === 0 || Math.random() < persistentState.probabilities.move) {
+    makeAMove(true);
+    renderMap();
+  } else {
+    // Wait
+    waitTimeHere++;
+  }
   renderHistory();
-  renderMap();
 });
 function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
@@ -377,6 +383,7 @@ function makeAMove(showBuildingNumber) {
       }
     }
   }
+  waitTimeHere = 0;
 }
 
 function renderMove(room, showBuildingNumber) {
@@ -479,10 +486,23 @@ function getExactSpaceNumber(room) {
 }
 
 function renderHistory() {
-  currentMoveDiv.textContent = clueHistory.length > 0 ? clueHistory[clueHistory.length - 1] : "";
+  let listedHistory;
+  if (waitTimeHere > 0) {
+    listedHistory = clueHistory.slice();
+    let displayText = "Wait";
+    if (waitTimeHere > 1) {
+      displayText += " x" + waitTimeHere;
+    }
+    displayText += " (" + renderBuildingNumber(getBuildingNumber(movementHistory[movementHistory.length - 1])) + ")";
+    currentMoveDiv.textContent = displayText;
+  } else {
+    listedHistory = clueHistory.slice(0, clueHistory.length - 1);
+    currentMoveDiv.textContent = clueHistory[clueHistory.length - 1] || "";
+  }
+  listedHistory.reverse();
   var historyHtml = "";
-  for (let i = clueHistory.length - 2; i >= 0; i--) {
-    historyHtml += '<li>' + clueHistory[i] + '</li>';
+  for (let clue of listedHistory) {
+    historyHtml += '<li>' + clue + '</li>';
   }
   historyUl.innerHTML = historyHtml;
 }
