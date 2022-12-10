@@ -2,6 +2,7 @@ const mapCanvas = document.getElementById("mapCanvas");
 const showMovementGraphCheckbox = document.getElementById("showMovementGraphCheckbox");
 const showThiefMovementCheckbox = document.getElementById("showThiefMovementCheckbox");
 const clueButton = document.getElementById("clueButton");
+const tipButton = document.getElementById("tipButton");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
 const showMovementRulesButton = document.getElementById("showMovementRulesButton");
@@ -186,6 +187,16 @@ function isThiefRoom(room) {
   return ch != null && ch !== ch.toLowerCase();
 }
 
+tipButton.addEventListener("click", function() {
+  let last_move = movementHistory[movementHistory.length - 1]
+  if (last_move == null) return;
+  let exactSpaceNumber = getExactSpaceNumber(last_move);
+  let formattedSpace = exactSpaceNumber[0] + "-" + exactSpaceNumber[1] + exactSpaceNumber[2];
+  if (confirm("--> The tip will appear right here <--")) {
+    alert(formattedSpace);
+  }
+});
+
 var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
@@ -282,7 +293,6 @@ function renderBuildingNumber(buildingNumber) {
 
 function getBuildingNumber(room) {
   var exactSpaceNumber = getExactSpaceNumber(room);
-  //console.log(exactSpaceNumber);
   return exactSpaceNumber[0];
 }
 function getExactSpaceNumber(room) {
