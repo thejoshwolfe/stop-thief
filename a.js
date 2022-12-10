@@ -1,8 +1,9 @@
 const mapCanvas = document.getElementById("mapCanvas");
 const showMovementGraphCheckbox = document.getElementById("showMovementGraphCheckbox");
 const showThiefMovementCheckbox = document.getElementById("showThiefMovementCheckbox");
-const clueButton = document.getElementById("clueButton");
 const tipButton = document.getElementById("tipButton");
+const arrestButton = document.getElementById("arrestButton");
+const clueButton = document.getElementById("clueButton");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
 const showMovementRulesButton = document.getElementById("showMovementRulesButton");
@@ -194,6 +195,26 @@ tipButton.addEventListener("click", function() {
   let formattedSpace = exactSpaceNumber[0] + "-" + exactSpaceNumber[1] + exactSpaceNumber[2];
   if (confirm("--> The tip will appear right here <--")) {
     alert(formattedSpace);
+  }
+});
+
+arrestButton.addEventListener("click", function() {
+  let last_move = movementHistory[movementHistory.length - 1]
+  if (last_move == null) return;
+  let exactSpaceNumber = getExactSpaceNumber(last_move);
+
+  let guess = prompt("Input three digits, e.g. 5-67 or 567");
+  if (guess == null || guess.length === 0) return;
+  // strip '-' and any other non-digit characters.
+  guess = guess.replace(/\D+/g, "");
+  if (guess.length !== 3) {
+    alert("incorrect formatting");
+    return;
+  }
+  if (guess !== exactSpaceNumber.join("")) {
+    alert("wrong");
+  } else {
+    alert("TODO: correct arrest");
   }
 });
 
