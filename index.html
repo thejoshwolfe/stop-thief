@@ -30,7 +30,7 @@
         <li>For each MOVE, if none of the above rules have determined the thief's movement space, the thief will choose one of the available spaces randomly.</li>
         <li>After an INCORRECT ARREST, the thief will do nothing.</li>
         <li>After a CORRECT ARREST, the thief will either COMPLY or RUN. (See Probabilities.)</li>
-        <li>(TODO: implement running.) For each RUN, the thief will MOVE 5 or 6 times. (See Probabilities.)</li>
+        <li>For each RUN, the thief will MOVE 5 or 6 times. (See Probabilities.)</li>
       </ol>
       More TODOs:
       <ul>
@@ -39,7 +39,6 @@
         <li>TODO: persist game state through refreshes.</li>
         <li>TODO: allow starting a new game (without refreshing the page).</li>
         <li>TODO: enable the thief to delay getting a crime as long as its still 1 space away.</li>
-        <li>TODO: hide building number when running.</li>
       </ul>
     </div>
     <input id="showProbabilitiesButton" type="button" value="Hide Probabilities">
@@ -47,8 +46,8 @@
       Probabilities:
       <ul>
         <li><label>(TODO: implement) Chance to MOVE on each CLUE: <input id="moveChanceTextbox" value="???"></label></li>
-        <li><label>(TODO: implement) Chance to COMPLY on each CORRECT ARREST: <input id="complyChanceTextbox" value="???"></label></li>
-        <li><label>(TODO: implement) Chance to MOVE an extra time on each RUN: <input id="runFartherChanceTextbox" value="???"></label></li>
+        <li><label>Chance to COMPLY on each CORRECT ARREST: <input id="complyChanceTextbox" value="???"></label></li>
+        <li><label>Chance to MOVE an extra time on each RUN: <input id="runFartherChanceTextbox" value="???"></label></li>
       </ul>
     </div>
     <script src="a.js"></script>

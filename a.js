@@ -281,7 +281,18 @@ arrestButton.addEventListener("click", function() {
   if (guess !== exactSpaceNumber.join("")) {
     alert("wrong");
   } else {
-    alert("TODO: correct arrest");
+    if (Math.random() < persistentState.probabilities.comply) {
+      alert("Successful arrest! (TODO: reset the game state.)");
+    } else {
+      alert("Thief is running!");
+      let runFarther = Math.random() < persistentState.probabilities.runFarther;
+      for (let i = 0; i < 5 + runFarther - 1; i++) {
+        makeAMove(false);
+      }
+      makeAMove(true);
+      renderHistory();
+      renderMap();
+    }
   }
 });
 
