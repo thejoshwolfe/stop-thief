@@ -19,7 +19,7 @@ var persistentState = {
   },
 };
 (function loadState() {
-  persistentState = recurse(persistentState, JSON.parse(localStorage["stop-theif"] || "null"));
+  persistentState = recurse(persistentState, JSON.parse(localStorage["stop-thief"] || "null"));
   function recurse(state, loadedData) {
     if (typeof state !== typeof loadedData) return state;
     if ((state == null) !== (loadedData == null)) return state;
@@ -41,7 +41,7 @@ var persistentState = {
   }
 })();
 function saveState() {
-  localStorage["stop-theif"] = JSON.stringify(persistentState);
+  localStorage["stop-thief"] = JSON.stringify(persistentState);
 }
 
 // Show/hide map layers.
@@ -353,6 +353,18 @@ function makeAMove(showBuildingNumber) {
     if (remainingLoot.indexOf(room) !== -1) {
       removeFromArray(remainingLoot, room);
     }
+
+    // Restock.
+    let previousBuilding = getExactSpaceNumber(movementHistory[movementHistory.length - 2])[0]
+    let currentBuilding = getExactSpaceNumber(movementHistory[movementHistory.length - 1])[0]
+    if (previousBuilding !== currentBuilding && 1 <= previousBuilding && previousBuilding <= 4) {
+      for (let room = 0; room < thiefRoomToAdjacentThiefRooms.length; room++) {
+        if (thiefRoomToAdjacentThiefRooms[room] == null) continue;
+        if (gameBoardString[room] !== "C") continue;
+        if (getExactSpaceNumber(room)[0] !== previousBuilding) continue;
+        addToArraySet(remainingLoot, room);
+      }
+    }
   }
 }
 
@@ -394,6 +406,7 @@ function getBuildingNumber(room) {
   return exactSpaceNumber[0];
 }
 function getExactSpaceNumber(room) {
+  if (room === theSubway) return [-1, -1, -1];
   var y = Math.floor(room / boardSize);
   var x = room - y * boardSize;
 
