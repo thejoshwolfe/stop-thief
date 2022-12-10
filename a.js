@@ -305,8 +305,8 @@ function makeAMove(showBuildingNumber) {
     }
     let startingRoom = randomArrayItem(startingRoomOptions);
     movementHistory.push(startingRoom);
-    removeFromArray(remainingLoot, startingRoom);
     clueHistory.push(renderMove(startingRoom, showBuildingNumber));
+    removeFromArray(remainingLoot, startingRoom);
   } else {
     // move
     let currentRoom = movementHistory[movementHistory.length - 1];
@@ -328,40 +328,44 @@ function makeAMove(showBuildingNumber) {
       }
     }
     let possibleMoves = [];
-    let possibleCrimes = [];
+    let irresistibleCrimes = [];
     for (let room of thiefRoomToAdjacentThiefRooms[currentRoom]) {
       if (room === previousRoom && currentRoom !== theSubway) continue; // no U-turns, except out of the subway.
       if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
-      if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
-        // TODO: don't always steal from the news stand
-        possibleCrimes.push(room);
+      if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1 && room !== newsStand) {
+        irresistibleCrimes.push(room);
       }
     }
     let room;
     if (possibleMoves.indexOf(theSubway) !== -1) {
       // I've got to get a(sub)way.
       room = theSubway;
-    } else if (possibleCrimes.length > 0) {
-      // gotta steal
-      room = randomArrayItem(possibleCrimes);
-      removeFromArray(remainingLoot, room);
+    } else if (irresistibleCrimes.length > 0) {
+      // Gotta steal
+      room = randomArrayItem(irresistibleCrimes);
     } else {
       // normal movement
       room = randomArrayItem(possibleMoves);
     }
     movementHistory.push(room);
     clueHistory.push(renderMove(room, showBuildingNumber));
+    if (remainingLoot.indexOf(room) !== -1) {
+      removeFromArray(remainingLoot, room);
+    }
   }
 }
 
 function renderMove(room, showBuildingNumber) {
   if (room === theSubway) return "The Subway";
   var typeCode = gameBoardString[room];
-  if (typeCode === "C" && remainingLoot.indexOf(room) !== -1) {
+  if (typeCode === "C" && remainingLoot.indexOf(room) === -1) {
     // this spaces has been robbed.
-    // TODO: news stand turns into street, not floor.
-    typeCode = "F";
+    if (room === newsStand) {
+      typeCode = "S";
+    } else {
+      typeCode = "F";
+    }
   }
   var result = (function() {
     switch (typeCode) {
