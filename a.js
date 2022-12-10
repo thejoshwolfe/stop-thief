@@ -100,47 +100,49 @@ function maybeShowElement(element, showIt) {
 })
 
 const gameBoardString = "" +
-"                               s      " +
-" S<s              s<           ^      " +
-" ^<sS<s<S<s<S<s<SsS<sSs<S<s<S<s<SsS<  " +
-" s<    D   W   W  s<  W   W   D ^^^<  " +
-"  S   ff  fff fff S< fff fff ff   s<  " +
-"  ^DfDfC  fFfDfFf ^<DfFf fFfDfFf   S  " +
-"  s   fff fff fff s< fff fff ffff  ^s " +
-"  ^   fFfDfF   D  ^< fFfDfCf  FfFf s^ " +
-"  S    ff ff   ff S< fff ff   ffff S  " +
-"  ^    Cf  C   Cf ^<  D       D  fW^  " +
-"  s    ff  f   ff s   ffff   ff  f s  " +
-"  ^    D   D   D  ^   D  fCfFfC ff ^  " +
-"  S    ff fff fff S< ff  fffffffff Sss" +
-"  ^    Cf fFf fFfD^<DfC    fFf fFf ^^^" +
-"  s fffffffffffff s<  ffff fff fff s  " +
-"  ^WfFfffFfFfFf   S<   fFfDfFfDfFfD^  " +
-" sS fff fffff     ^<    ff fff fff S  " +
-"ss<  D     D    ss<<<s  D   W   W  s  " +
-"sS<sS<s<S<s<S<sS^S<<<^SsS<s<S<s<S<sS  " +
-"^^<^^<^<^<^<^<^^^^<<<^^^^<^<^<^<^<^^  " +
-"  s  W   W   D  ^^<<<^  W   D   W  s  " +
-"  S  ff fff ff  ^^<<<^  ffffff fff S  " +
-"  ^  FfDfCfWfF  s<<<<^   fCfFf fFfDs  " +
-"  s  ff     ff    S<     f  ff fff ^  " +
-"  S  D      fFf   s<  FfFf fffDfFf S  " +
-"  ^ fff ff  ffff  S< fffff fff fff ^  " +
-"s<sWfFf fFfD ffFfDs<Df         fFfWs  " +
-"  ^ fff ffff  fff ^< ff      f fff ^s<" +
-"  S fFfDfCfFf  D  S< fFfWfCfDfCfFf S  " +
-"  ^ fff    fff f  ^< fff      ffff ^  " +
-"  sDfCf        F  s< fFf       fFfDs  " +
-"  ^  ff fff fffff ^< fff fff fffff ^  " +
-"  S   fDfFfDfCfFfWS<WfFfDfCfDfC    S  " +
-"s<s<    fff   fff ^< fff     ff  ss<  " +
-"  S<s    W     D  s<  W       D  sS<  " +
-"  ^<^Ss<S<s<S<s<SsC<sSs<S<s<S<s<S^^<  " +
-"                              s       " +
-"                              ^       " +
+"                               s      " + // 0
+" S<s              s<           ^      " + // 38
+" ^<sS<s<S<s<S<s<SsS<sSs<S<s<S<s<SsS<  " + // 76
+" s<    D   W   W  s<  W   W   D ^^^<  " + // 114
+"  S   ff  fff fff S< fff fff ff   s<  " + // 152
+"  ^DfDfC  fFfDfFf ^<DfFf fFfDfFf   S  " + // 190
+"  s   fff fff fff s< fff fff ffff  ^s " + // 228
+"  ^   fFfDfF   D  ^< fFfDfCf  FfFf s^ " + // 266
+"  S    ff ff   ff S< fff ff   ffff S  " + // 304
+"  ^    Cf  C   Cf ^<  D       D  fW^  " + // 342
+"  s    ff  f   ff s   ffff   ff  f s  " + // 380
+"  ^    D   D   D  ^   D  fCfFfC ff ^  " + // 418
+"  S    ff fff fff S< ff  fffffffff Sss" + // 456
+"  ^    Cf fFf fFfD^<DfC    fFf fFf ^^^" + // 494
+"  s fffffffffffff s<  ffff fff fff s  " + // 532
+"  ^WfFfffFfFfFf   S<   fFfDfFfDfFfD^  " + // 570
+" sS fff fffff     ^<    ff fff fff S  " + // 608
+"ss<  D     D    ss<<<s  D   W   W  s  " + // 646
+"sS<sS<s<S<s<S<sS^S<<<^SsS<s<S<s<S<sS  " + // 684
+"^^<^^<^<^<^<^<^^^^<<<^^^^<^<^<^<^<^^  " + // 722
+"  s  W   W   D  ^^<<<^  W   D   W  s  " + // 760
+"  S  ff fff ff  ^^<<<^  ffffff fff S  " + // 798
+"  ^  FfDfCfWfF  s<<<<^   fCfFf fFfDs  " + // 836
+"  s  ff     ff    S<     f  ff fff ^  " + // 874
+"  S  D      fFf   s<  FfFf fffDfFf S  " + // 912
+"  ^ fff ff  ffff  S< fffff fff fff ^  " + // 950
+"s<sWfFf fFfD ffFfDs<Df         fFfWs  " + // 988
+"  ^ fff ffff  fff ^< ff      f fff ^s<" + // 1026
+"  S fFfDfCfFf  D  S< fFfWfCfDfCfFf S  " + // 1064
+"  ^ fff    fff f  ^< fff      ffff ^  " + // 1102
+"  sDfCf        F  s< fFf       fFfDs  " + // 1140
+"  ^  ff fff fffff ^< fff fff fffff ^  " + // 1178
+"  S   fDfFfDfCfFfWS<WfFfDfCfDfC    S  " + // 1216
+"s<s<    fff   fff ^< fff     ff  ss<  " + // 1254
+"  S<s    W     D  s<  W       D  sS<  " + // 1292
+"  ^<^Ss<S<s<S<s<SsC<sSs<S<s<S<s<S^^<  " + // 1330
+"                              s       " + // 1368
+"                              ^       " + // 1406
 "";
 const boardSize = 38;
 const newsStand = 1348;
+const theSubway = -10000;
+const subwayStops = [39, 110, 701, 1294, 1326];
 if (gameBoardString.length !== boardSize * boardSize) throw new Error();
 function toIndex(r, c) {
   return r * boardSize + c;
@@ -162,6 +164,7 @@ const roomToIndexes = [];
 const thiefRoomToAdjacentThiefRooms = [];
 const roomToDoorwayOrientation = [];
 function computeMapLayout() {
+  // Merge '<' and '^' rooms into large rooms.
   for (let r = 0; r < boardSize; r++) {
     for (let c = 0; c < boardSize; c++) {
       let index = toIndex(r, c);
@@ -190,6 +193,7 @@ function computeMapLayout() {
     }
   }
 
+  // Map out thief space connections.
   for (let startingRoom = 0; startingRoom < roomToIndexes.length; startingRoom++) {
     if (!isThiefRoom(startingRoom)) continue;
     let adjacentThiefRooms = thiefRoomToAdjacentThiefRooms[startingRoom] = [];
@@ -213,6 +217,13 @@ function computeMapLayout() {
     if (adjacentThiefRooms.length < 2) throw new Error();
   }
 
+  // Subway.
+  thiefRoomToAdjacentThiefRooms[theSubway] = subwayStops.slice();
+  for (let room of subwayStops) {
+    thiefRoomToAdjacentThiefRooms[room].push(theSubway);
+  }
+
+  // Door/window orientation.
   for (let i = 0; i < gameBoardString.length; i++) {
     if (!(gameBoardString[i] === "D" || gameBoardString[i] === "W")) continue;
     if (gameBoardString[i - boardSize] !== " ") {
@@ -224,29 +235,30 @@ function computeMapLayout() {
       roomToDoorwayOrientation[i] = "d";
     }
   }
-}
-function roomToAdjacentRooms(room) {
-  let indexes = roomToIndexes[room];
-  if (indexes == null) return [];
-  let adjacentRooms = [];
-  for (let index of indexes) {
-    for (let adjacentIndex of adjacentIndexOffsets.map(offset => index + offset)) {
-      let otherRoom = indexToRoom[adjacentIndex];
-      if (otherRoom == null || otherRoom === -1 || otherRoom === room) continue;
-      addToArraySet(adjacentRooms, otherRoom);
+
+  function roomToAdjacentRooms(room) {
+    let indexes = roomToIndexes[room];
+    if (indexes == null) return [];
+    let adjacentRooms = [];
+    for (let index of indexes) {
+      for (let adjacentIndex of adjacentIndexOffsets.map(offset => index + offset)) {
+        let otherRoom = indexToRoom[adjacentIndex];
+        if (otherRoom == null || otherRoom === -1 || otherRoom === room) continue;
+        addToArraySet(adjacentRooms, otherRoom);
+      }
     }
+    return adjacentRooms;
   }
-  return adjacentRooms;
-}
-function isThiefRoom(room) {
-  let ch = gameBoardString[room];
-  return ch != null && ch !== ch.toLowerCase();
+  function isThiefRoom(room) {
+    let ch = gameBoardString[room];
+    return ch != null && ch !== ch.toLowerCase();
+  }
 }
 
 tipButton.addEventListener("click", function() {
-  let last_move = movementHistory[movementHistory.length - 1]
-  if (last_move == null) return;
-  let exactSpaceNumber = getExactSpaceNumber(last_move);
+  let currentRoom = movementHistory[movementHistory.length - 1]
+  if (currentRoom == null || currentRoom === theSubway) return;
+  let exactSpaceNumber = getExactSpaceNumber(currentRoom);
   let formattedSpace = exactSpaceNumber[0] + "-" + exactSpaceNumber[1] + exactSpaceNumber[2];
   if (confirm("--> The tip will appear right here <--")) {
     alert(formattedSpace);
@@ -254,9 +266,9 @@ tipButton.addEventListener("click", function() {
 });
 
 arrestButton.addEventListener("click", function() {
-  let last_move = movementHistory[movementHistory.length - 1]
-  if (last_move == null) return;
-  let exactSpaceNumber = getExactSpaceNumber(last_move);
+  let currentRoom = movementHistory[movementHistory.length - 1]
+  if (currentRoom == null || currentRoom === theSubway) return;
+  let exactSpaceNumber = getExactSpaceNumber(currentRoom);
 
   let guess = prompt("Input three digits, e.g. 5-67 or 567");
   if (guess == null || guess.length === 0) return;
@@ -318,7 +330,7 @@ function makeAMove(showBuildingNumber) {
     let possibleMoves = [];
     let possibleCrimes = [];
     for (let room of thiefRoomToAdjacentThiefRooms[currentRoom]) {
-      if (room === previousRoom) continue; // no U-turns
+      if (room === previousRoom && currentRoom !== theSubway) continue; // no U-turns, except out of the subway.
       if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
       if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1) {
@@ -326,22 +338,25 @@ function makeAMove(showBuildingNumber) {
         possibleCrimes.push(room);
       }
     }
-    if (possibleCrimes.length > 0) {
+    let room;
+    if (possibleMoves.indexOf(theSubway) !== -1) {
+      // I've got to get a(sub)way.
+      room = theSubway;
+    } else if (possibleCrimes.length > 0) {
       // gotta steal
-      let room = randomArrayItem(possibleCrimes);
-      movementHistory.push(room);
+      room = randomArrayItem(possibleCrimes);
       removeFromArray(remainingLoot, room);
-      clueHistory.push(renderMove(room, showBuildingNumber));
     } else {
       // normal movement
-      let room = randomArrayItem(possibleMoves);
-      movementHistory.push(room);
-      clueHistory.push(renderMove(room, showBuildingNumber));
+      room = randomArrayItem(possibleMoves);
     }
+    movementHistory.push(room);
+    clueHistory.push(renderMove(room, showBuildingNumber));
   }
 }
 
 function renderMove(room, showBuildingNumber) {
+  if (room === theSubway) return "The Subway";
   var typeCode = gameBoardString[room];
   if (typeCode === "C" && remainingLoot.indexOf(room) !== -1) {
     // this spaces has been robbed.
@@ -529,22 +544,45 @@ function renderMap() {
       context.fillStyle = context.strokeStyle = "#f3a6ff";
       context.lineWidth = tileSize / 10;
       for (let i = 0; i < movementHistory.length - 1; i++) {
-        let {x, y} = getCenterOfRoom(movementHistory[i]);
+        let room = movementHistory[i]
+        let nextRoom = movementHistory[i + 1];
+
+        // Draw a dot here.
+        let {x, y} = getCenterOfRoom(room);
         context.beginPath();
         context.arc(x, y, tileSize / 5, 0, Math.PI*2);
         context.fill();
-        let otherRoom = movementHistory[i + 1];
+        if (nextRoom === theSubway) {
+          // Entering the subway.
+          context.beginPath()
+          context.moveTo(x, y);
+          context.lineTo(x - tileSize * 0.6, y + tileSize * 0.8);
+          context.stroke();
+        } else if (room === theSubway) {
+          // Exiting the subway.
+          let {x:other_x, y:other_y} = getCenterOfRoom(nextRoom);
+          context.beginPath()
+          context.moveTo(other_x, other_y);
+          context.lineTo(other_x - tileSize * 0.6, other_y + tileSize * 0.8);
+          context.stroke();
+        } else {
+          // Connect rooms with a line.
+          context.beginPath();
+          context.moveTo(x, y);
+          let {x:other_x, y:other_y} = getCenterOfRoom(nextRoom);
+          context.lineTo(other_x, other_y);
+          context.stroke();
+        }
+      }
+      let currentRoom = movementHistory[movementHistory.length - 1];
+      if (currentRoom !== theSubway) {
+        // Big circle around current location.
+        context.lineWidth = tileSize / 6;
         context.beginPath();
-        context.moveTo(x, y);
-        let {x:other_x, y:other_y} = getCenterOfRoom(otherRoom);
-        context.lineTo(other_x, other_y);
+        let {x, y} = getCenterOfRoom(currentRoom);
+        context.arc(x, y, Math.sqrt(1/2) * tileSize, 0, Math.PI*2);
         context.stroke();
       }
-      context.lineWidth = tileSize / 6;
-      context.beginPath();
-      let {x, y} = getCenterOfRoom(movementHistory[movementHistory.length - 1]);
-      context.arc(x, y, Math.sqrt(1/2) * tileSize, 0, Math.PI*2);
-      context.stroke();
     }
   }
 }
