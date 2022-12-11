@@ -21,3 +21,6 @@ Mechanically, the app is technically feature complete, but looks terrible and ha
 As far as I can tell, the trademarks and copyrights for the original game have expired.
 
 This web app is under the MIT License.
+
+Thanks to [Board Game Museum on YouTube](https://www.youtube.com/watch?v=WSwJkaSFeYc) for providing a recording of playing the game,
+which I used as a reference to recreate all the sounds in this app using JavaScript and math.
