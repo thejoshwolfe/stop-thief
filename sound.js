@@ -190,4 +190,24 @@ const sounds = {
 
     return duration;
   },
+
+  Wait() {
+    const duration = 0.035;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    const note = 440 * Math.pow(2, 9.5/12); // F sharp-and-a-half
+
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      data[i] = volume * Math.sign(Math.sin(t * twoPi * note));
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
 };
