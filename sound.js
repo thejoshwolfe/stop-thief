@@ -6,7 +6,7 @@ const majorSecond = Math.pow(2, 2/12);
 const volume = 0.1;
 
 const theDiv = document.getElementById("theDiv");
-["Door", "Crime", "Street"].forEach(name => {
+["Door", "Crime", "Street", "Subway"].forEach(name => {
   let button = document.createElement("input");
   button.type = "button";
   button.value = name;
@@ -21,11 +21,11 @@ const sounds = {
   Door() {
     const duration = 2.0;
     const bufferSize = sampleRate * duration;
-    const noiseBuffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
 
     const choppyPeriod = 1/20;
 
-    const data = noiseBuffer.getChannelData(0);
+    const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       const t = i / sampleRate;
       const choppyWave = Math.sin(t * twoPi / choppyPeriod);
@@ -37,7 +37,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer: noiseBuffer});
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
     noiseNode.connect(audioCtx.destination);
     noiseNode.start();
 
@@ -47,11 +47,11 @@ const sounds = {
   Crime() {
     const duration = 1.5;
     const bufferSize = sampleRate * duration;
-    const noiseBuffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
 
     const ascentPeriod = duration / 9;
 
-    const data = noiseBuffer.getChannelData(0);
+    const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       const t = i / sampleRate;
       const ascentTime = t % ascentPeriod;
@@ -59,7 +59,7 @@ const sounds = {
       data[i] = volume * Math.sign(Math.sin(ascentTime * twoPi * f) + Math.sin(ascentTime * twoPi * f * majorSecond));
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer: noiseBuffer});
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
     noiseNode.connect(audioCtx.destination);
     noiseNode.start();
 
@@ -69,7 +69,7 @@ const sounds = {
   Street() {
     const duration = 1.0;
     const bufferSize = sampleRate * duration;
-    const noiseBuffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
 
     const noteFrequencies = [
       440 * Math.pow(2, 13/12), // Bb
@@ -85,7 +85,7 @@ const sounds = {
     const noteDurations = [0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.045,  0];
     const noteEnds = noteTimes.map((t, i) => t + noteDurations[i]);
 
-    const data = noiseBuffer.getChannelData(0);
+    const data = buffer.getChannelData(0);
     let noteCursor = 0;
     for (let i = 0; i < bufferSize; i++) {
       const t = i / sampleRate;
@@ -99,7 +99,54 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer: noiseBuffer});
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
+
+  Subway() {
+    const duration = 2.5;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    const noteFrequencies = [
+      110 * Math.pow(2, 2/12), // B
+      110 * Math.pow(2, 2/12),
+      110 * Math.pow(2, 3/12),
+      110 * Math.pow(2, 4/12), // Db
+    ];
+    const noteTimes =     [0.000, 0.090, 0.170, 0.240];
+    const noteDurations = [0.035, 0.025, 0.025, 0.025];
+    const repeates = 8;
+    const noteLoopPeriod = duration / repeates;
+    for (let i = 1; i < repeates; i++) {
+      for (let j = 0; j < 4; j++) {
+        noteTimes.push(noteTimes[j] + noteLoopPeriod * i);
+        noteDurations.push(noteDurations[j]);
+        noteFrequencies.push(noteFrequencies[j]);
+      }
+    }
+    noteTimes.push(999);
+    noteDurations.push(0);
+    const noteEnds = noteTimes.map((t, i) => t + noteDurations[i]);
+
+    const data = buffer.getChannelData(0);
+    let noteCursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t >= noteTimes[noteCursor + 1]) {
+        noteCursor = noteCursor + 1;
+      } else if (t > noteEnds[noteCursor]) {
+        data[i] = 0.0;
+      } else {
+        const f = noteFrequencies[noteCursor];
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
     noiseNode.connect(audioCtx.destination);
     noiseNode.start();
 
