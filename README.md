@@ -8,8 +8,11 @@ http://wolfesoftware.com/stop-thief/
 
 # Status
 
-This app is not finished.
-See the app itself for a list of TODOs.
+Mechanically, the app is technically feature complete, but looks terrible and has numerous usability issues.
+
+* TODO: persist game state through refreshes.
+* TODO: allow starting a new game without refreshing the page, including after a successful (and compliant) arrest.
+* TODO: adjust AI to enable circling crime spaces but not moving away rather than immediately moving into them.
 
 # License
 
