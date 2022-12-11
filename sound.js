@@ -210,4 +210,45 @@ const sounds = {
 
     return duration;
   },
+
+  Tip() {
+    const duration = 0.7;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    // Bb \ C# / F# / C \ D half sharp / F# and a half \ C / E
+    const noteFrequencies = [
+      440 * Math.pow(2, 13/12), // Bb
+      440 * Math.pow(2, 4/12), // C#
+      440 * Math.pow(2, 9/12), // F#
+      440 * Math.pow(2, 15/12), // C
+      440 * Math.pow(2, 5.5/12), // D half sharp
+      440 * Math.pow(2, 9.5/12), // F sharp and a half
+      440 * Math.pow(2, 3/12), // C
+      440 * Math.pow(2, 7/12), // E
+    ];
+    const noteTimes =     [0.00, 0.06, 0.16, 0.24, 0.30, 0.40, 0.48, 0.56,   999];
+    const noteDurations = [0.04, 0.04, 0.04, 0.04, 0.05, 0.04, 0.04, 0.04,  0];
+    const noteEnds = noteTimes.map((t, i) => t + noteDurations[i]);
+
+    const data = buffer.getChannelData(0);
+    let noteCursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t >= noteTimes[noteCursor + 1]) {
+        noteCursor = noteCursor + 1;
+      } else if (t > noteEnds[noteCursor]) {
+        data[i] = 0.0;
+      } else {
+        const f = noteFrequencies[noteCursor];
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
 };
