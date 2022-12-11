@@ -6,15 +6,26 @@ const majorSecond = Math.pow(2, 2/12);
 const volume = 0.1;
 
 const theDiv = document.getElementById("theDiv");
-["Door", "Crime", "Street", "Subway", "Floor"].forEach(name => {
+[
+  "Crime", "Floor", "Glass", "Door", "Street", "Subway",
+  "Wait", // Also mundane button presses.
+  "Tip",
+  "ArrestStart", "ArrestWrong", "ArrestCorrect", "Comply", "Run",
+].forEach(name => {
   let button = document.createElement("input");
   button.type = "button";
   button.value = name;
   theDiv.appendChild(button);
 
-  button.addEventListener("click", function() {
-    sounds[name]();
-  });
+  setTimeout(function() {
+    if (sounds[name] != null) {
+      button.addEventListener("click", function() {
+        sounds[name]();
+      });
+    } else {
+      button.disabled = true;
+    }
+  }, 0);
 });
 
 const sounds = {
