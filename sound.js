@@ -6,7 +6,7 @@ const majorSecond = Math.pow(2, 2/12);
 const volume = 0.1;
 
 const theDiv = document.getElementById("theDiv");
-["Door", "Crime", "Street", "Subway"].forEach(name => {
+["Door", "Crime", "Street", "Subway", "Floor"].forEach(name => {
   let button = document.createElement("input");
   button.type = "button";
   button.value = name;
@@ -143,6 +143,33 @@ const sounds = {
       } else {
         const f = noteFrequencies[noteCursor];
         data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
+
+  Floor() {
+    const duration = 1.8;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      let t = i / sampleRate;
+      if (t > 0.9) {
+        // Second step.
+        t -= 0.9;
+      }
+      if (t < 0.23) {
+        const squarePeriod = 1/(150 + 20000 * t * t * t * t);
+        data[i] = volume * Math.sign(Math.sin(t * twoPi / squarePeriod));
+      } else {
+        data[i] = 0;
       }
     }
 
