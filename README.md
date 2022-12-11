@@ -13,6 +13,7 @@ Mechanically, the app is technically feature complete, but looks terrible and ha
 * TODO: persist game state through refreshes.
 * TODO: allow starting a new game without refreshing the page, including after a successful (and compliant) arrest.
 * TODO: adjust AI to enable circling crime spaces but not moving away rather than immediately moving into them.
+* TODO: thief should exit the subway immediately after entering it, not waiting for another clue.
 
 # License
 
