@@ -43,8 +43,8 @@ const sounds = {
       if (choppyWave < -0.6) {
         data[i] = 0;
       } else {
-        const squarePeriod = 1/(90 + 5 * t);
-        data[i] = volume * Math.sign(Math.sin(t * twoPi / squarePeriod));
+        const squareFrequency = 90 + 5 * t;
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * squareFrequency));
       }
     }
 
@@ -177,10 +177,59 @@ const sounds = {
         t -= 0.9;
       }
       if (t < 0.23) {
-        const squarePeriod = 1/(150 + 20000 * t * t * t * t);
-        data[i] = volume * Math.sign(Math.sin(t * twoPi / squarePeriod));
+        const squareFrequency = 150 + 20000 * t * t * t * t;
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * squareFrequency));
       } else {
         data[i] = 0;
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
+
+  Glass() {
+    const duration = 0.67;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    const noteFrequencies = [
+      880 * Math.pow(2, 6.5/12), // E half flat
+      880 * Math.pow(2, 8.5/12), // F half sharp
+      880 * Math.pow(2, 10.5/12), // G half sharp
+      880 * Math.pow(2, 12.5/12), //  A half sharp
+    ];
+    const noteTimes = [];
+
+    const noteDuration = duration / 17.5;
+    for (let i = 0; i < 16; i++) {
+      noteTimes.push(noteDuration * (i + 1.5));
+      if (noteFrequencies.length <= i) {
+        noteFrequencies.push(noteFrequencies[i % 4]);
+      }
+    }
+    noteTimes.push(999);
+
+    const data = buffer.getChannelData(0);
+    let noteCursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t < noteTimes[0]) {
+        // Put the b in bwing.
+        const s = t / (noteDuration * 1.5);
+        const squareFrequency = 880 + 400 * s * s;
+        data[i] = volume * 0.5 * Math.sign(
+          Math.sin(t * twoPi * squareFrequency) +
+          Math.sin(t * twoPi * squareFrequency * Math.pow(2, 4/12))
+        );
+      } else if (t >= noteTimes[noteCursor + 1]) {
+        noteCursor = noteCursor + 1;
+      } else {
+        const f = noteFrequencies[noteCursor];
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
       }
     }
 
