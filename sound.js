@@ -1,5 +1,4 @@
-const audioCtx = new AudioContext();
-const sampleRate = audioCtx.sampleRate;
+let audioCtx = null;
 const twoPi = 2 * Math.PI;
 const majorSecond = Math.pow(2, 2/12);
 
@@ -20,6 +19,7 @@ const theDiv = document.getElementById("theDiv");
   setTimeout(function() {
     if (sounds[name] != null) {
       button.addEventListener("click", function() {
+        if (audioCtx == null) audioCtx = new AudioContext();
         sounds[name]();
       });
     } else {
@@ -31,8 +31,9 @@ const theDiv = document.getElementById("theDiv");
 const sounds = {
   Door() {
     const duration = 2.0;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const choppyPeriod = 1/20;
 
@@ -57,8 +58,9 @@ const sounds = {
 
   Crime() {
     const duration = 1.5;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const ascentPeriod = duration / 9;
 
@@ -79,8 +81,9 @@ const sounds = {
 
   Street() {
     const duration = 1.0;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const noteFrequencies = [
       440 * Math.pow(2, 13/12), // Bb
@@ -120,8 +123,9 @@ const sounds = {
 
   Subway() {
     const duration = 2.5;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const noteFrequencies = [
       110 * Math.pow(2, 2/12), // B
@@ -168,8 +172,9 @@ const sounds = {
 
   Floor() {
     const duration = 1.8;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -195,8 +200,9 @@ const sounds = {
 
   Glass() {
     const duration = 0.67;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const noteFrequencies = [
       880 * Math.pow(2, 6.5/12), // E half flat
@@ -245,8 +251,9 @@ const sounds = {
 
   Wait() {
     const duration = 0.035;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const note = 440 * Math.pow(2, 9.5/12); // F sharp-and-a-half
 
@@ -265,8 +272,9 @@ const sounds = {
 
   Tip() {
     const duration = 0.7;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     // Bb \ C# / F# / C \ D half sharp / F# and a half \ C / E
     const noteFrequencies = [
@@ -307,8 +315,9 @@ const sounds = {
 
   ArrestStart() {
     const duration = 4;
+    const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
-    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
 
     const checkpointPitches = [
       (0/12), // A
@@ -383,5 +392,38 @@ const sounds = {
     function linearInterpolate(y_min, y_max, s) {
       return y_min + s * (y_max - y_min);
     }
+  },
+
+  ArrestWrong() {
+    const duration = 0.42;
+    const sampleRate = audioCtx.sampleRate;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
+
+    const fundamentalFrequency = 1/(duration / 16);
+
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      data[i] = volume * Math.sign(
+        Math.sin(t * twoPi * fundamentalFrequency * 1)/1 +
+        Math.sin(t * twoPi * fundamentalFrequency * 2)/1 +
+        Math.sin(t * twoPi * fundamentalFrequency * 3)/2 +
+        Math.sin(t * twoPi * fundamentalFrequency * 4)/1 +
+        Math.sin(t * twoPi * fundamentalFrequency * 5)/3 +
+        Math.sin(t * twoPi * fundamentalFrequency * 6)/3 +
+        Math.sin(t * twoPi * fundamentalFrequency * 7)/3 +
+        Math.sin(t * twoPi * fundamentalFrequency * 8)/1 +
+        Math.sin(t * twoPi * fundamentalFrequency * 16)/2 +
+        Math.sin(t * twoPi * fundamentalFrequency * 32)/2 +
+        0
+      );
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
   },
 };
