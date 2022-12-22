@@ -102,7 +102,8 @@ const sounds = {
       const t = i / sampleRate;
       if (t >= noteTimes[noteCursor + 1]) {
         noteCursor = noteCursor + 1;
-      } else if (t > noteEnds[noteCursor]) {
+      }
+      if (t > noteEnds[noteCursor]) {
         data[i] = 0.0;
       } else {
         const f = noteFrequencies[noteCursor];
@@ -149,7 +150,8 @@ const sounds = {
       const t = i / sampleRate;
       if (t >= noteTimes[noteCursor + 1]) {
         noteCursor = noteCursor + 1;
-      } else if (t > noteEnds[noteCursor]) {
+      }
+      if (t > noteEnds[noteCursor]) {
         data[i] = 0.0;
       } else {
         const f = noteFrequencies[noteCursor];
@@ -225,9 +227,10 @@ const sounds = {
           Math.sin(t * twoPi * squareFrequency) +
           Math.sin(t * twoPi * squareFrequency * Math.pow(2, 4/12))
         );
-      } else if (t >= noteTimes[noteCursor + 1]) {
-        noteCursor = noteCursor + 1;
       } else {
+        if (t >= noteTimes[noteCursor + 1]) {
+          noteCursor = noteCursor + 1;
+        }
         const f = noteFrequencies[noteCursor];
         data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
       }
@@ -286,7 +289,8 @@ const sounds = {
       const t = i / sampleRate;
       if (t >= noteTimes[noteCursor + 1]) {
         noteCursor = noteCursor + 1;
-      } else if (t > noteEnds[noteCursor]) {
+      }
+      if (t > noteEnds[noteCursor]) {
         data[i] = 0.0;
       } else {
         const f = noteFrequencies[noteCursor];
@@ -299,5 +303,66 @@ const sounds = {
     noiseNode.start();
 
     return duration;
+  },
+
+  ArrestStart() {
+    const duration = 4;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
+
+    const checkpointFrequences = [
+      440 * Math.pow(2, 0/12), // ??
+      440 * Math.pow(2, 7/12), // ??
+      440 * Math.pow(2, 0/12),
+      440 * Math.pow(2, 7/12),
+      440 * Math.pow(2, 0/12),
+      440 * Math.pow(2, 7/12),
+      440 * Math.pow(2, 0/12),
+      440 * Math.pow(2, 7/12),
+      440 * Math.pow(2, -7/12), // ??
+
+      440 * Math.pow(2, -7/12), // ??
+    ];
+    const checkpointTimes = [
+      0 * 1.5/7,
+      1 * 1.5/7,
+      2 * 1.5/7,
+      3 * 1.5/7,
+      4 * 1.5/7,
+      5 * 1.5/7,
+      6 * 1.5/7,
+      7 * 1.5/7,
+      4,
+
+      999,
+    ];
+
+    const data = buffer.getChannelData(0);
+    let cursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t >= checkpointTimes[cursor + 1]) {
+        cursor = cursor + 1;
+      }
+      const f = linearInterpolate(
+        checkpointFrequences[cursor],
+        checkpointFrequences[cursor + 1],
+        checkpointTimes[cursor],
+        checkpointTimes[cursor + 1],
+        t,
+      );
+      data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+
+    function linearInterpolate(y_min, y_max, x_min, x_max, x) {
+      const s = (x - x_min) / (x_max - x_min);
+      return y_min + s * (y_max - y_min);
+    }
   },
 };
