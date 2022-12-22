@@ -310,28 +310,30 @@ const sounds = {
     const bufferSize = sampleRate * duration;
     const buffer = new AudioBuffer({length: bufferSize, sampleRate: audioCtx.sampleRate});
 
-    const checkpointFrequences = [
-      440 * Math.pow(2, 0/12), // ??
-      440 * Math.pow(2, 7/12), // ??
-      440 * Math.pow(2, 0/12),
-      440 * Math.pow(2, 7/12),
-      440 * Math.pow(2, 0/12),
-      440 * Math.pow(2, 7/12),
-      440 * Math.pow(2, 0/12),
-      440 * Math.pow(2, 7/12),
-      440 * Math.pow(2, -7/12), // ??
+    const checkpointPitches = [
+      (0/12), // A
+      (12/12), // A
+      (0/12),
+      (12/12),
+      (0/12),
+      (12/12),
+      (0/12),
+      (12/12),
+      (8/12),
+      (-19/12),
 
-      440 * Math.pow(2, -7/12), // ??
+      (-19/12),
     ];
     const checkpointTimes = [
-      0 * 1.5/7,
-      1 * 1.5/7,
-      2 * 1.5/7,
-      3 * 1.5/7,
-      4 * 1.5/7,
-      5 * 1.5/7,
-      6 * 1.5/7,
-      7 * 1.5/7,
+      0.0 * 1.5/7,
+      1.0 * 1.5/7,
+      2.0 * 1.5/7,
+      3.0 * 1.5/7,
+      4.0 * 1.5/7,
+      5.0 * 1.5/7,
+      6.0 * 1.5/7,
+      7.0 * 1.5/7,
+      7.5 * 1.5/7,
       4,
 
       999,
@@ -339,19 +341,27 @@ const sounds = {
 
     const data = buffer.getChannelData(0);
     let cursor = 0;
+    let sample = volume;
+    let nextEdgeTime = 0;
     for (let i = 0; i < bufferSize; i++) {
       const t = i / sampleRate;
       if (t >= checkpointTimes[cursor + 1]) {
         cursor = cursor + 1;
       }
-      const f = linearInterpolate(
-        checkpointFrequences[cursor],
-        checkpointFrequences[cursor + 1],
-        checkpointTimes[cursor],
-        checkpointTimes[cursor + 1],
-        t,
-      );
-      data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+      if (t >= nextEdgeTime) {
+        sample = -sample;
+        const pitch = interpolate(
+          checkpointPitches[cursor],
+          checkpointPitches[cursor + 1],
+          checkpointTimes[cursor],
+          checkpointTimes[cursor + 1],
+          t,
+        );
+        const f = 440 * Math.pow(2, pitch);
+        const period = 1/f;
+        nextEdgeTime += period / 2;
+      }
+      data[i] = sample;
     }
 
     let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
@@ -360,8 +370,17 @@ const sounds = {
 
     return duration;
 
-    function linearInterpolate(y_min, y_max, x_min, x_max, x) {
+    function interpolate(y_min, y_max, x_min, x_max, x) {
       const s = (x - x_min) / (x_max - x_min);
+      // sag the curve toward lower frequences.
+      const y_sag = Math.min(y_min, y_max);
+      return linearInterpolate(
+        linearInterpolate(y_min, y_sag, s),
+        linearInterpolate(y_sag, y_max, s),
+        s,
+      );
+    }
+    function linearInterpolate(y_min, y_max, s) {
       return y_min + s * (y_max - y_min);
     }
   },
