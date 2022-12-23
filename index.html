@@ -1,6 +1,36 @@
 <html>
-  <head><title>Stop Thief</title></head>
+  <head>
+    <meta charset="utf-8">
+    <title>Stop Thief</title>
+    <style>
+      #mobileDiv {
+        background-color: #333;
+        height: 100vh;
+        width: 100vh;
+        color: white;
+        font-size: 10vw;
+      }
+      table {
+        color: inherit;
+        font-size: inherit;
+      }
+
+      #buttonsTable button {
+        font-size: inherit;
+      }
+    </style>
+  </head>
   <body>
+    <div id="mobileDiv">
+      <table id="lcdTable"><tbody>
+        <tr style="font-size: 3vw;"><td>BLDG./STREET LOC.</td></tr>
+        <tr><td></td></tr>
+        <tr><td>ELECTRONIC CRIME SCANNER™</td></tr>
+      </tbody></table>
+      <table id="buttonsTable"><tbody>
+        <tr><td><button id="number1Button">1<button></td><td><button id="number2Button">2</button></td><td><button id="offButton">OFF</button></td></tr>
+      </tbody></table>
+    </div>
     <div id="mapDiv">
       <table><tr>
         <td><canvas id="mapCanvas" width=1 height=1></canvas></td>
