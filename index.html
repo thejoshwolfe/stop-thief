@@ -1,6 +1,21 @@
 <html>
-  <head><title>Stop Thief</title></head>
-  <body>
+  <head>
+    <meta charset="utf-8">
+    <title>Stop Thief</title>
+    <style>
+      .invisibleButton {
+        background: transparent;
+        border: none !important;
+        font-size: 0px;
+      }
+    </style>
+  </head>
+  <body style="margin: 0px;">
+    <div id="crimeScannerBackgroundDiv" style="background: #181818; width: 100vw; height: 100vh;">
+      <canvas id="crimeScannerCanvas" width=1000 height=2200 style="position:absolute;"></canvas>
+    </div>
+    <div id="everythingElseDiv" style="display: none;">
+
     <div id="mapDiv">
       <table><tr>
         <td><canvas id="mapCanvas" width=1 height=1></canvas></td>
@@ -41,6 +56,8 @@
         <li><label>Chance to COMPLY on each CORRECT ARREST: <input id="complyChanceTextbox" value="???"></label></li>
         <li><label>Chance to MOVE an extra time on each RUN: <input id="runFartherChanceTextbox" value="???"></label></li>
       </ul>
+    </div>
+
     </div>
     <script src="a.js"></script>
   </body>

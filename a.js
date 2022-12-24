@@ -1,3 +1,529 @@
+function resize() {
+  const backgroundDiv = document.getElementById("crimeScannerBackgroundDiv");
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const backgroundWidth = backgroundDiv.clientWidth;
+  const backgroundHeight = backgroundDiv.clientHeight;
+  const backgroundAspectRatio = backgroundWidth / backgroundHeight;
+  const foregroundAspectRatio = crimeScannerCanvas.width / crimeScannerCanvas.height;
+  let scale;
+  let x, y;
+  if (backgroundAspectRatio < foregroundAspectRatio) {
+    // Width limited.
+    scale = backgroundWidth / crimeScannerCanvas.width;
+    crimeScannerCanvas.style.width = backgroundWidth;
+    const scaledHeight = backgroundWidth / foregroundAspectRatio;
+    crimeScannerCanvas.style.height = scaledHeight + "px";
+    x = 0;
+    y = Math.floor((backgroundHeight - scaledHeight) / 2);
+  } else {
+    // Height limited.
+    scale = backgroundHeight / crimeScannerCanvas.height;
+    crimeScannerCanvas.style.height = backgroundHeight;
+    const scaledWidth = backgroundHeight * foregroundAspectRatio;
+    crimeScannerCanvas.style.width = scaledWidth + "px";
+    x = Math.floor((backgroundWidth - scaledWidth) / 2);
+    y = 0;
+  }
+  crimeScannerCanvas.style.left = x + "px";
+  crimeScannerCanvas.style.top = y + "px";
+
+  // Position buttons.
+  for (let row of buttonBoundingBoxes) {
+    const button = document.getElementById("button" + row[0]);
+    button.style.left = (x + row[1] * scale) + "px";
+    button.style.top = (y + row[2] * scale) + "px";
+    button.style.width = row[3] * scale + "px";
+    button.style.height = row[4] * scale + "px";
+  }
+
+  render();
+}
+setTimeout(resize, 0);
+window.addEventListener("resize", resize);
+
+// This can be called by devs to generate the thing.
+function _generateMachine() {
+  let code = "";
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const context = crimeScannerCanvas.getContext("2d");
+  context.fillStyle = "#222";
+  context.fillRect(0, 0, crimeScannerCanvas.width, crimeScannerCanvas.height);
+
+  // LCD background and frame.
+  context.fillStyle = "#111";
+  context.beginPath();
+  context.roundRect(105, 45, 790, 620, 50);
+  context.fill();
+  context.fillStyle = "#211";
+  context.beginPath();
+  context.roundRect(140, 80, 720, 550, 18);
+  context.fill();
+  context.fillStyle = "#400616";
+  context.beginPath();
+  context.roundRect(291, 120, 434, 186, 2);
+  context.fill();
+
+  // LCD painted overlay.
+  context.strokeStyle = "#ddd";
+  context.fillStyle = "#ddd";
+  context.lineWidth = 12;
+  // Border and stripes.
+  context.beginPath();
+  context.roundRect(175, 115, 650, 480, 14);
+  context.moveTo(175, 320);
+  context.lineTo(825, 320);
+  context.moveTo(175, 350);
+  context.lineTo(825, 350);
+  context.stroke();
+  // Text.
+  context.font = "bold 37px sans-serif";
+  context.fillText("BLDG.", 205, 197, 117);
+  context.lineWidth = 4;
+  context.moveTo(188, 203); context.lineTo(333, 203);
+  context.stroke();
+  context.fillText("STREET", 188, 236, 145);
+  context.fillText("LOC.", 684, 222, 90);
+  context.font = "bold 70px sans-serif";
+  context.fillText("ELECTRONIC", 282, 464, 436);
+  context.fillText("CRIME SCANNER", 197, 528, 571);
+  context.font = "bold 25px sans-serif";
+  context.fillText("TM", 768, 500, 35);
+
+  // Button frame.
+  context.fillStyle = "#111";
+  context.beginPath();
+  context.roundRect(0, 716, 1000, 1484, 60);
+  context.fill();
+  context.fillStyle = "#222";
+  context.beginPath();
+  context.roundRect(35, 751, 930, 1414, 25);
+  context.fill();
+
+  // Button grid.
+  const buttonNames = [
+    "1", "2", "Settings",
+    "3", "4", "On",
+    "5", "6", "Tip",
+    "7", "8", "Arrest",
+    "9", "0", "Clue",
+  ];
+  const white = "#dfdeda";
+  const buttonColors = function() {
+    const c1 = "#e2bd3a";
+    const c2 = "#e99c0e";
+    const c3 = "#d68647";
+    const c4 = "#d84334";
+    const c5 = c4;
+    const c6 = "#ad2764";
+    const c7 = "#6a243c";
+    const c8 = "#1f2058";
+    const c9 = "#0e4780";
+    const c0 = "#114739";
+    const tip = c4;
+    const arrest = c3;
+    const clue = c1;
+    return [
+      c1,c2, c1,c2, white,white,
+      c3,c4, c3,c4, white,white,
+      c5,c6, c5,c6, tip,tip,
+      c7,c8, c7,c8, arrest,arrest,
+      c9,c0, c9,c0, clue,clue,
+    ];
+  }();
+  code += "const buttonBoundingBoxes = [\n";
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 3; c++) {
+      let i = r * 3 + c;
+      let x = 35 + 125 + (182+67) * c - 22/2;
+      let y = 751 + 62 + (187+72) * r - 22/2;
+      let width = 182+22;
+      let height = 187+22;
+
+      // Two-color background.
+      const colorTop    = buttonColors[2*i];
+      const colorBottom = buttonColors[2*i + 1];
+      context.fillStyle = colorTop;
+      context.fillRect(x, y, width, height);
+      if (colorTop !== colorBottom) {
+        context.fillStyle = colorBottom;
+        context.fillRect(x, y + height/2, width, height/2);
+      }
+
+      // Text.
+      switch (buttonNames[i]) {
+        case "1": case "2": case "3": case "4": case "5":
+        case "6": case "7": case "8": case "9": case "0":
+          context.fillStyle = white;
+          context.font = "bold 170px FreeSans";
+          context.fillText(buttonNames[i], x + 56, y + 164);
+          break;
+        case "Settings":
+          context.fillStyle = "#407986";
+          // A gear.
+          context.save();
+          {
+            context.strokeStyle = context.fillStyle;
+            context.lineWidth = 5;
+            context.lineJoin = "round";
+            context.beginPath();
+            const cx = x + width/2;
+            const cy = y + height/2;
+            const slice_angle = 2*Math.PI/8;
+            const r_out = 56;
+            const r_mid = 43;
+            const r_min = 30;
+            const tooth_width = 0.4;
+            const slope_width = 0.1;
+            const base_width  = 0.4;
+            for (let i = 0; i < 9; i++) {
+              context.arc(cx, cy, r_out,
+                slice_angle * (-tooth_width/2 + i),
+                slice_angle * (-tooth_width/2 + i + tooth_width),
+              );
+              if (i === 8) break;
+              context.arc(cx, cy, r_mid,
+                slice_angle * (-tooth_width/2 + i + tooth_width + slope_width),
+                slice_angle * (-tooth_width/2 + i + tooth_width + slope_width + base_width),
+              );
+            }
+            context.arc(cx, cy, r_min, 0, 2 * Math.PI, true);
+            context.fill();
+            context.stroke();
+          }
+          context.restore();
+          break;
+        case "On":
+          context.fillStyle = "#d06951";
+          context.font = "bold 60px FreeSans";
+          context.fillText("ON", x + 58, y + 126);
+          break;
+        case "Tip":
+          // Ultra narrow letter T.
+          context.fillStyle = white;
+          context.fillRect(x + 76, y + 35, 54, 24);
+          context.fillRect(x + 91, y + 35, 24, 106);
+          // The word TIP.
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("TIP", x + 81, y + 168);
+          break;
+        case "Arrest":
+          context.fillStyle = white;
+          context.font = "bold 130px FreeSans";
+          context.fillText("A", x + 56, y + 140);
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("ARREST", x + 49, y + 168);
+          break;
+        case "Clue":
+          context.fillStyle = white;
+          context.font = "bold 130px FreeSans";
+          context.fillText("C", x + 56, y + 140);
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("CLUE", x + 67, y + 168);
+          break;
+        default: throw new Error("not handled: " + buttonNames[i]);
+      }
+
+      // Border.
+      context.strokeStyle = "#111";
+      context.lineWidth = 22;
+      context.beginPath();
+      context.roundRect(x, y, width, height, 22);
+      context.stroke();
+
+      code += `  ["${buttonNames[i]}", ${x}, ${y}, ${width}, ${height}],\n`;
+    }
+  }
+  code += "];\n";
+
+  console.log(code);
+}
+
+// Generated image:
+const machineImage = new Image();
+machineImage.addEventListener("load", render);
+machineImage.src = "electronic-crime-scanner.png";
+// Generated code:
+const buttonBoundingBoxes = [
+  ["1", 149, 802, 204, 209],
+  ["2", 398, 802, 204, 209],
+  ["Settings", 647, 802, 204, 209],
+  ["3", 149, 1061, 204, 209],
+  ["4", 398, 1061, 204, 209],
+  ["On", 647, 1061, 204, 209],
+  ["5", 149, 1320, 204, 209],
+  ["6", 398, 1320, 204, 209],
+  ["Tip", 647, 1320, 204, 209],
+  ["7", 149, 1579, 204, 209],
+  ["8", 398, 1579, 204, 209],
+  ["Arrest", 647, 1579, 204, 209],
+  ["9", 149, 1838, 204, 209],
+  ["0", 398, 1838, 204, 209],
+  ["Clue", 647, 1838, 204, 209],
+];
+// End generated code.
+
+buttonBoundingBoxes.forEach(row => {
+  const name = row[0];
+  const button = document.createElement("button");
+  button.id = "button" + name;
+  button.style.position = "absolute";
+  button.classList.add("invisibleButton");
+  // This might be findable by a screen reader or something:
+  button.textContent = name;
+  // It goes in the background div.
+  document.getElementById("crimeScannerBackgroundDiv").appendChild(button);
+  const handler = function() {
+    switch (name) {
+      case "1": case "2": case "3": case "4": case "5":
+      case "6": case "7": case "8": case "9": case "0":
+        const number = parseInt(name);
+        return () => handleNumber(number);
+      case "Settings": return handleSettings;
+      case "On":       return handleNewGame;
+      case "Tip":      return handleTip;
+      case "Arrest":   return handleArrest;
+      case "Clue":     return handleClue;
+      default: throw new Error("not handled: " + buttonNames[i]);
+    }
+  }();
+  button.addEventListener("click", handler);
+});
+
+window.addEventListener("keydown", function(event) {
+  const SHIFT = 1 << 0;
+  const CTRL =  1 << 1;
+  const ALT =   1 << 2;
+  const META =  1 << 3;
+  const modifiers = (
+    event.shiftKey * SHIFT |
+    event.ctrlKey * CTRL |
+    event.altKey * ALT |
+    event.metaKey * META
+  );
+  switch (event.key) {
+      case "1": case "2": case "3": case "4": case "5":
+      case "6": case "7": case "8": case "9": case "0":
+        if (modifiers === 0) {
+          event.preventDefault();
+          const number = parseInt(event.key);
+          handleNumber(number);
+        }
+        break;
+    case " ":
+      if (modifiers === 0) {
+        event.preventDefault();
+        handleClue();
+      }
+      break;
+    case "Escape":
+      if (modifiers === 0) {
+        event.preventDefault();
+        handleSettings();
+      }
+      break;
+    case "Backspace":
+      if (modifiers === 0) {
+        event.preventDefault();
+        // TODO: backspace typed numbers.
+      }
+      break;
+    case "T": case "t":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleTip();
+      }
+      break;
+    case "A": case "a":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleArrest();
+      }
+      break;
+    case "N": case "n":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleNewGame();
+      }
+      break;
+  }
+});
+
+function getDisplayText() {
+  let displayText = "";
+
+  if (movementHistory.length === 0) return "";
+  const currentRoom = movementHistory[movementHistory.length - 1];
+  if (currentRoom === theSubway) return "";
+
+  const buildingNumber = getExactSpaceNumber(currentRoom)[0];
+  const roomCode = gameBoardString[currentRoom];
+  displayText += buildingNumber;
+  displayText += function() {
+    switch (roomCode) {
+      case "S": return "St";
+      case "F": return "Fl";
+      case "C": return "Cr";
+      case "W": return "Gl";
+      case "D": return "dr";
+      default: throw new Error("not handled: " + roomCode);
+    }
+  }();
+
+  return displayText;
+}
+
+function render() {
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const context = crimeScannerCanvas.getContext("2d");
+  context.drawImage(machineImage, 0, 0);
+
+  const displayText = getDisplayText();
+  for (let i = 0; i < displayText.length; i++) {
+    renderSevenSegmentDisplay(i, displayText[i]);
+  }
+
+  function renderSevenSegmentDisplay(index, char) {
+    // bottom left corner
+    const x = [375, 551, 636][index];
+    const y = 232;
+    const width = 8;
+    //  0
+    // 5 1
+    //  6
+    // 4 2
+    //  3
+    const segments = function() {
+      switch (char) {
+        case "0": return [1,1,1,1,1,1,0];
+        case "1": return [0,1,1,0,0,0,0];
+        case "2": return [1,1,0,1,1,0,1];
+        case "3": return [1,1,1,1,0,0,1];
+        case "4": return [0,1,1,0,0,1,1];
+        case "5": return [1,0,1,1,0,1,1];
+        case "6": return [0,0,1,1,1,1,1];
+        case "7": return [1,1,1,0,0,0,0];
+        case "8": return [1,1,1,1,1,1,1];
+        case "9": return [1,1,1,0,0,1,1];
+
+        case "C": return [1,0,0,1,1,1,0];
+        case "F": return [1,0,0,0,1,1,1];
+        case "G": return [1,0,1,1,1,1,0];
+        case "S": return [1,0,1,1,0,1,1];
+        case "d": return [0,1,1,1,1,0,1];
+        case "r": return [0,0,0,0,1,0,1];
+        case "l": return [0,0,0,0,1,1,0];
+        case "t": return [0,0,0,1,1,1,1];
+        case "_": return [0,0,0,1,0,0,0];
+
+        default: throw new Error("not handled: " + char);
+      }
+    }();
+    context.fillStyle = "#f22";
+    if (segments[0] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 6.5);
+      context.lineTo(x + width * 1.0, y - width * 7.0);
+      context.lineTo(x + width * 3.0, y - width * 7.0);
+      context.lineTo(x + width * 3.5, y - width * 6.5);
+      context.lineTo(x + width * 3.0, y - width * 6.0);
+      context.lineTo(x + width * 1.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[1] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 3.5, y - width * 6.5);
+      context.lineTo(x + width * 4.0, y - width * 6.0);
+      context.lineTo(x + width * 4.0, y - width * 4.0);
+      context.lineTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 3.0, y - width * 4.0);
+      context.lineTo(x + width * 3.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[2] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 4.0, y - width * 3.0);
+      context.lineTo(x + width * 4.0, y - width * 1.0);
+      context.lineTo(x + width * 3.5, y - width * 0.5);
+      context.lineTo(x + width * 3.0, y - width * 1.0);
+      context.lineTo(x + width * 3.0, y - width * 3.0);
+      context.fill();
+    }
+    if (segments[3] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 0.5);
+      context.lineTo(x + width * 1.0, y - width * 1.0);
+      context.lineTo(x + width * 3.0, y - width * 1.0);
+      context.lineTo(x + width * 3.5, y - width * 0.5);
+      context.lineTo(x + width * 3.0, y - width * 0.0);
+      context.lineTo(x + width * 1.0, y - width * 0.0);
+      context.fill();
+    }
+    if (segments[4] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 1.0, y - width * 3.0);
+      context.lineTo(x + width * 1.0, y - width * 1.0);
+      context.lineTo(x + width * 0.5, y - width * 0.5);
+      context.lineTo(x + width * 0.0, y - width * 1.0);
+      context.lineTo(x + width * 0.0, y - width * 3.0);
+      context.fill();
+    }
+    if (segments[5] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 6.5);
+      context.lineTo(x + width * 1.0, y - width * 6.0);
+      context.lineTo(x + width * 1.0, y - width * 4.0);
+      context.lineTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 0.0, y - width * 4.0);
+      context.lineTo(x + width * 0.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[6] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 1.0, y - width * 4.0);
+      context.lineTo(x + width * 3.0, y - width * 4.0);
+      context.lineTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 3.0, y - width * 3.0);
+      context.lineTo(x + width * 1.0, y - width * 3.0);
+      context.fill();
+    }
+  }
+}
+
+
+
+function handleSettings() {
+  const everythingElseDiv = document.getElementById("everythingElseDiv");
+  if (everythingElseDiv.style.display == "none") {
+    everythingElseDiv.style.display = "block";
+    everythingElseDiv.scrollIntoView({behavior:"smooth"});
+  } else {
+    everythingElseDiv.style.display = "none";
+  }
+}
+function handleNewGame() {
+  // TODO
+}
+function handleTip() {
+  // TODO
+}
+function handleArrest() {
+  // TODO
+}
+function handleClue() {
+  // TODO: check if game is running.
+  doClue();
+}
+function handleNumber(number) {
+  // TODO
+}
+
+
 const mapCanvas = document.getElementById("mapCanvas");
 const tipButton = document.getElementById("tipButton");
 const arrestButton = document.getElementById("arrestButton");
@@ -292,6 +818,7 @@ arrestButton.addEventListener("click", function() {
       makeAMove(true);
       renderHistory();
       renderMap();
+      render();
     }
   }
 });
@@ -301,7 +828,9 @@ var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
 var waitTimeHere = 0;
-clueButton.addEventListener("click", function() {
+clueButton.addEventListener("click", handleClue);
+
+function doClue() {
   if (movementHistory.length === 0 || Math.random() < persistentState.probabilities.move) {
     makeAMove(true);
     renderMap();
@@ -310,7 +839,8 @@ clueButton.addEventListener("click", function() {
     waitTimeHere++;
   }
   renderHistory();
-});
+  render();
+}
 function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
     // start
