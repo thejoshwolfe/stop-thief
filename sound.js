@@ -4,29 +4,66 @@ const majorSecond = Math.pow(2, 2/12);
 
 const volume = 0.1;
 
-const theDiv = document.getElementById("theDiv");
+const singlesDiv = document.getElementById("singlesDiv");
 [
   "Crime", "Floor", "Glass", "Door", "Street", "Subway",
   "Wait", // Also mundane button presses.
   "Tip",
-  "ArrestStart", "ArrestWrong", "ArrestCorrect", "Comply", "Run",
+  "Arrest", "Wrong", "Correct", "Comply", "Run",
 ].forEach(name => {
   let button = document.createElement("input");
   button.type = "button";
   button.value = name;
-  theDiv.appendChild(button);
+  singlesDiv.appendChild(button);
 
-  setTimeout(function() {
-    if (sounds[name] != null) {
-      button.addEventListener("click", function() {
-        if (audioCtx == null) audioCtx = new AudioContext();
-        sounds[name]();
-      });
-    } else {
-      button.disabled = true;
-    }
-  }, 0);
+  button.addEventListener("click", function() {
+    playSounds([sounds[name]]);
+  });
 });
+
+document.getElementById("subwayStreetButton").addEventListener("click", function() {
+  playSounds([sounds.Subway, 0.2, sounds.Street]);
+});
+document.getElementById("arrestWrongButton").addEventListener("click", function() {
+  playSounds([sounds.Arrest, 1.1, sounds.Wrong]);
+});
+document.getElementById("arrestCorrectComplyButton").addEventListener("click", function() {
+  playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Comply]);
+});
+document.getElementById("arrestCorrectRunButton").addEventListener("click", function() {
+  playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Run]);
+});
+document.getElementById("arrestCorrectRunRandomButton").addEventListener("click", function() {
+  const sequence = [sounds.Arrest, sounds.Correct, 1.4, sounds.Run];
+  for (let i = 5 + Math.floor(2 * Math.random()); i > 0; i--) {
+    sequence.push(0.4);
+    sequence.push([
+      sounds.Crime,
+      sounds.Floor,
+      sounds.Glass,
+      sounds.Door,
+      sounds.Street,
+    ][Math.floor(5 * Math.random())]);
+  }
+  playSounds(sequence);
+});
+
+function playSounds(sequence) {
+  if (audioCtx == null) audioCtx = new AudioContext();
+  let t = audioCtx.currentTime;
+  for (let item of sequence) {
+    if (typeof item === "function") {
+      const buffer = item();
+      let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+      noiseNode.connect(audioCtx.destination);
+      noiseNode.start(t);
+      t += buffer.length / audioCtx.sampleRate;
+    } else if (typeof item === "number") {
+      t += item;
+    } else throw new Error("not sure what this is: " + item);
+  }
+  return t;
+}
 
 const sounds = {
   Door() {
@@ -49,11 +86,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Crime() {
@@ -72,11 +105,7 @@ const sounds = {
       data[i] = volume * Math.sign(Math.sin(ascentTime * twoPi * f) + Math.sin(ascentTime * twoPi * f * majorSecond));
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Street() {
@@ -114,11 +143,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Subway() {
@@ -163,11 +188,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Floor() {
@@ -191,11 +212,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Glass() {
@@ -242,11 +259,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Wait() {
@@ -263,11 +276,7 @@ const sounds = {
       data[i] = volume * Math.sign(Math.sin(t * twoPi * note));
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Tip() {
@@ -306,14 +315,10 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
-  ArrestStart() {
+  Arrest() {
     const duration = 4;
     const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
@@ -373,11 +378,7 @@ const sounds = {
       data[i] = sample;
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
 
     function interpolate(y_min, y_max, x_min, x_max, x) {
       const s = (x - x_min) / (x_max - x_min);
@@ -394,7 +395,7 @@ const sounds = {
     }
   },
 
-  ArrestWrong() {
+  Wrong() {
     const duration = 0.42;
     const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
@@ -420,14 +421,10 @@ const sounds = {
       );
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
-  ArrestCorrect() {
+  Correct() {
     const duration = 2.4;
     const sampleRate = audioCtx.sampleRate;
     const bufferSize = sampleRate * duration;
@@ -451,11 +448,7 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Comply() {
@@ -490,11 +483,7 @@ const sounds = {
       data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 
   Run() {
@@ -550,10 +539,6 @@ const sounds = {
       }
     }
 
-    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
-    noiseNode.connect(audioCtx.destination);
-    noiseNode.start();
-
-    return duration;
+    return buffer;
   },
 };
