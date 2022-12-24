@@ -354,16 +354,14 @@ window.addEventListener("keydown", function(event) {
 function getDisplayText() {
   let displayText = "";
 
-  const currentRoom = getCurrentRoom();
-  if (currentRoom == null) return "";
-  if (currentRoom === theSubway) return "";
+  const {clueHistory} = persistentState.game;
+  const clue = clueHistory[clueHistory.length - 1];
+  if (clue == null) return "";
+  if (clue === " b") return " Sb";
 
-  // TODO: This is wrong. we need to use clueHistory so that looted C spaces are Fl.
-  const buildingNumber = getExactSpaceNumber(currentRoom)[0];
-  const roomCode = gameBoardString[currentRoom];
-  displayText += buildingNumber;
+  displayText += clue[0];
   displayText += function() {
-    switch (roomCode) {
+    switch (clue[1]) {
       case "S": return "St";
       case "F": return "Fl";
       case "C": return "Cr";
@@ -413,10 +411,13 @@ function render() {
         case "F": return [1,0,0,0,1,1,1];
         case "G": return [1,0,1,1,1,1,0];
         case "S": return [1,0,1,1,0,1,1];
+        case "b": return [0,0,1,1,1,1,1];
         case "d": return [0,1,1,1,1,0,1];
         case "r": return [0,0,0,0,1,0,1];
         case "l": return [0,0,0,0,1,1,0];
         case "t": return [0,0,0,1,1,1,1];
+
+        case " ": return [0,0,0,0,0,0,0];
         case "_": return [0,0,0,1,0,0,0];
 
         default: throw new Error("not handled: " + char);
@@ -869,7 +870,7 @@ function makeAMove(showBuildingNumber) {
     }
     let startingRoom = randomArrayItem(startingRoomOptions);
     movementHistory.push(startingRoom);
-    clueHistory.push(renderMove(startingRoom, showBuildingNumber));
+    clueHistory.push(renderClue(startingRoom, showBuildingNumber));
     removeFromArray(remainingLoot, startingRoom);
   } else {
     // move
@@ -913,7 +914,7 @@ function makeAMove(showBuildingNumber) {
       room = randomArrayItem(possibleMoves);
     }
     movementHistory.push(room);
-    clueHistory.push(renderMove(room, showBuildingNumber));
+    clueHistory.push(renderClue(room, showBuildingNumber));
     if (remainingLoot.indexOf(room) !== -1) {
       removeFromArray(remainingLoot, room);
     }
@@ -934,9 +935,9 @@ function makeAMove(showBuildingNumber) {
   saveState();
 }
 
-function renderMove(room, showBuildingNumber) {
-  if (room === theSubway) return "The Subway";
-  var typeCode = gameBoardString[room];
+function renderClue(room, showBuildingNumber) {
+  if (room === theSubway) return " b";
+  let typeCode = gameBoardString[room];
   if (typeCode === "C" && persistentState.game.remainingLoot.indexOf(room) === -1) {
     // this space has been robbed.
     if (room === newsStand) {
@@ -945,8 +946,16 @@ function renderMove(room, showBuildingNumber) {
       typeCode = "F";
     }
   }
+  if (showBuildingNumber) {
+    return getBuildingNumber(room) + typeCode;
+  } else {
+    return " " + typeCode;
+  }
+}
+function clueToVerboseDescription(clue) {
+  if (clue === " b") return "The Subway";
   var result = (function() {
-    switch (typeCode) {
+    switch (clue[1]) {
       case "S": return "Street";
       case "F": return "Floor";
       case "C": return "Crime";
@@ -955,8 +964,8 @@ function renderMove(room, showBuildingNumber) {
       default: throw new Error();
     }
   })();
-  if (showBuildingNumber) {
-    result += " (" + renderBuildingNumber(getBuildingNumber(room)) + ")";
+  if (clue[0] !== " ") {
+    result += " (" + renderBuildingNumber(parseInt(clue[0])) + ")";
   }
   return result;
 }
@@ -1047,13 +1056,13 @@ function renderHistory() {
   } else {
     listedHistory = clueHistory.slice(0, clueHistory.length - 1);
     if (clueHistory.length > 0) {
-      currentMoveDiv.textContent = clueHistory.length + ". " + clueHistory[clueHistory.length - 1];
+      currentMoveDiv.textContent = clueHistory.length + ". " + clueToVerboseDescription(clueHistory[clueHistory.length - 1]);
     } else {
       currentMoveDiv.textContent = "";
     }
   }
   for (let i = 0; i < listedHistory.length; i++) {
-    listedHistory[i] = (i + 1) + ". " + listedHistory[i];
+    listedHistory[i] = (i + 1) + ". " + clueToVerboseDescription(listedHistory[i]);
   }
   listedHistory.reverse();
   var historyHtml = "";
