@@ -393,18 +393,18 @@ function playAnimations(animations) {
   for (let animation of animations) {
     switch (animation) {
       case "Arrest":
-        sequence.push([sounds.Arrest, " Ar"]);
+        sequence.push([sounds.Arrest, " PL"]);
         continue;
       case "Wrong":
         sequence.push(1.1);
         sequence.push([sounds.Wrong, " --", 1.0]);
         continue;
       case "Correct":
-        sequence.push([sounds.Correct, " Ar"]);
+        sequence.push([sounds.Correct, " PL"]);
         continue;
       case "Comply":
         sequence.push(1.4);
-        sequence.push([sounds.Comply, " CP"]);
+        sequence.push([sounds.Comply, " Ar"]);
         continue;
       case "Run":
         sequence.push(1.4);
@@ -444,9 +444,11 @@ function playSequence(sequence) {
     } else {
       const [sound, lcd, extraDelay] = item;
       const buffer = sound();
-      let node = new AudioBufferSourceNode(audioCtx, {buffer});
-      node.connect(audioCtx.destination);
-      node.start(audioCtx.currentTime + t);
+      if (persistentState.ui.playSound) {
+        let node = new AudioBufferSourceNode(audioCtx, {buffer});
+        node.connect(audioCtx.destination);
+        node.start(audioCtx.currentTime + t);
+      }
 
       animateLcd(lcd, t);
 
@@ -469,12 +471,13 @@ function getDisplayText() {
     }
   }
   if (animatedLcd != null) return animatedLcd;
-  let displayText = "";
+  if (persistentState.game.arrested) return "";
 
   const {clueHistory} = persistentState.game;
   const clue = clueHistory[clueHistory.length - 1];
   if (clue == null) return "";
 
+  let displayText = "";
   displayText += clue[0];
   displayText += function() {
     switch (clue[1]) {
@@ -528,6 +531,7 @@ function render() {
         case "C": return [1,0,0,1,1,1,0];
         case "F": return [1,0,0,0,1,1,1];
         case "G": return [1,0,1,1,1,1,0];
+        case "L": return [0,0,0,1,1,1,0];
         case "P": return [1,1,0,0,1,1,1];
         case "S": return [1,0,1,1,0,1,1];
         case "b": return [0,0,1,1,1,1,1];
@@ -689,6 +693,8 @@ var persistentState = {
     showClueHistory: true,
     showMovementRules: true,
     showProbabilities: true,
+    showSoundTest: false,
+    playSound: true,
   },
 };
 (function loadState() {
@@ -717,8 +723,8 @@ function saveState() {
   localStorage["stop-thief"] = JSON.stringify(persistentState);
 }
 
-// Show/hide map layers.
-["showMovementGraph", "showThiefMovement"].forEach(propertyName => {
+// Checkboxes
+["showMovementGraph", "showThiefMovement", "playSound"].forEach(propertyName => {
   let checkbox = document.getElementById(propertyName + "Checkbox");
   checkbox.checked = persistentState.ui[propertyName];
   checkbox.addEventListener("change", function() {
@@ -729,7 +735,7 @@ function saveState() {
 });
 
 // Show/hide UI sections.
-["Map", "ClueHistory", "MovementRules", "Probabilities"].forEach(name => {
+["Map", "ClueHistory", "MovementRules", "Probabilities", "SoundTest"].forEach(name => {
   const button = document.getElementById("show" + name + "Button");
   const div = document.getElementById("the" + name + "Div");
   const propertyName = "show" + name;
@@ -743,6 +749,16 @@ function saveState() {
     div.style.display = persistentState.ui[propertyName] ? "block" : "none";
     button.value = (persistentState.ui[propertyName] ? "Hide" : "Show") + button.value.slice(4);
   }
+});
+
+document.getElementById("resetSettingsButton").addEventListener("click", function() {
+  if (isGameInProgress()) {
+    if (!confirm("Reset settings and abandon current game?")) return;
+  } else {
+    if (!confirm("Reset settings?")) return;
+  }
+  delete localStorage["stop-thief"];
+  window.location.reload();
 });
 
 function maybeShowElement(element, showIt) {
