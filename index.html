@@ -36,7 +36,7 @@
       Thief movement rules (in this order):
       <ol>
         <li>For each CLUE, the thief will either MOVE or WAIT. (See Probabilities.)</li>
-        <li>For each MOVE, the thief will always use the SUBWAY if the thief is on one of the 5 STREET spaces with SUBWAY access, unless the thief has just used the SUBWAY 1 MOVE ago. While using the SUBWAY, the thief cannot be arrested, and a TIP cannot be used. The MOVE after using the SUBWAY is always 1 of the 5 STREET spaces with SUBWAY access (Note: this can be the same STREET space where the thief was 1 MOVE ago.) The next MOVE never uses the SUBWAY (otherwise, the thief would never get away from the subway.).</li>
+        <li>For each MOVE, the thief will always use the SUBWAY if the thief is on one of the 5 STREET spaces with SUBWAY access, unless the thief has just used the SUBWAY 1 MOVE ago. After using the SUBWAY, the thief immediately moves into 1 of the 5 STREET spaces with SUBWAY access (Note: this can be the same STREET space where the thief was before using the SUBWAY.) The next MOVE never uses the SUBWAY (otherwise, the thief would never get away from the subway.).</li>
         <li>For each MOVE, if the thief has just moved onto a DOOR or WINDOW, the thief will continue through to the other side.</li>
         <li>For each MOVE, the thief can move up to 2 board spaces in any direction (including diagonally) to land on a numbered space. If the thief steps onto the street during a MOVE, the thief will stop on a street space; in other words, the thief cannot leap across the street into the door or window of another building in a single MOVE. This establishes the set of available spaces.</li>
         <li>For each MOVE, if there are 1 or more available unused indoor CRIME spaces, the thief will choose randomly from among them and move to it. A used indoor CRIME space is considered a FLOOR space until it is restocked, and a used outdoor CRIME space (the NEWS STAND) is considered a STREET space until it is restocked. Indoor CRIME spaces are restocked when the thief leaves the building; the NEWS STAND is restocked after the thief COMPLIES with a CORRECT ARREST.</li>
@@ -70,8 +70,11 @@
 
     <div style="margin: 10px;">
       <label><input id="playSoundCheckbox" type="checkbox"> Play sound</label>
+      <div style="margin: 10px;">
+        Keyboard shortcuts: Escape=Settings, Spacebar=Clue, Shift+N=NewGame, Shift+A=Arrest, Shift+T=Tip, Numbers/Backspace work during arrest prompt.
+      </div>
       <input id="resetSettingsButton" type="button" value="Reset All Settings And Everything">
-      Source code: <a href="https://github.com/thejoshwolfe/stop-thief">github.com/thejoshwolfe/stop-thief</a>
+      App version 1.0. Source code: <a href="https://github.com/thejoshwolfe/stop-thief">github.com/thejoshwolfe/stop-thief</a>
     </div>
     <script src="sound.js"></script>
     <script src="a.js"></script>

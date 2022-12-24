@@ -6,11 +6,33 @@ Web app that recreates the behavior of the Electronic Crime Scanner(TM) from the
 
 http://wolfesoftware.com/stop-thief/
 
-# Status
+![screenshot](https://user-images.githubusercontent.com/87436/209446532-e92e00e8-7ca4-4a80-af9b-c5ae896d1030.png)
 
-Mechanically, the app is technically feature complete, but looks terrible and has numerous usability issues.
 
-* TODO: (optional) adjust AI to enable circling crime spaces but not moving away rather than immediately moving into them.
+# Version History
+
+## 1.0
+
+Feature parity with the original device as far as I can tell.
+I'm not totally certain about the AI movement rules, because I don't have a working device to test with.
+The random probabilities are all configured in the user interface in the settings.
+
+Additional features this app adds:
+
+* Option to disable sound.
+* Game state and settings persist through page refreshes (using `localStorage`).
+* Debug view that shows the thief moving through the map (spoilers).
+* Adjustable probabilities as described above.
+* Faster LCD blink cycle with more on time than off time. Should help readability.
+* Additional intermediate LCD displays during animations such as the arrest sequence or using the subway. Should help the hearing impaired maybe.
+* A full history of clues with plain English descriptions available in the settings in case you miss something (not spoilers).
+* Keyboard hotkeys including number keys and Backspace support when entering the arrest prompt.
+* Sound test UI for just playing the sounds.
+
+Changed features relative to the original device:
+
+* OFF button replaced by Settings button.
+* ON button starts a new game, with confirmation prompt when you're mid-game.
 
 # License
 
