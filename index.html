@@ -16,7 +16,8 @@
     </div>
     <div id="everythingElseDiv" style="display: none;">
 
-    <div id="mapDiv">
+    <input id="showMapButton" type="button" value="Show Map">
+    <div id="theMapDiv">
       <table><tr>
         <td><canvas id="mapCanvas" width=1 height=1></canvas></td>
         <td><div>
@@ -25,15 +26,13 @@
         </div></td>
       </tr></table>
     </div>
-    <div>
-      <input id="tipButton"    type="button" value="Tip"    style="background: #c73818; color: white; font-weight: bold;">
-      <input id="arrestButton" type="button" value="Arrest" style="background: #c48325; color: white; font-weight: bold;">
-      <input id="clueButton"   type="button" value="Clue"   style="background: #beaa2f; color: white; font-weight: bold;">
+    <input id="showClueHistoryButton" type="button" value="Show Clue History">
+    <div id="theClueHistoryDiv">
+      <div id="currentMoveDiv" style="font-size: 400%;"></div>
+      <ul id="historyUl" style="padding: 0px; list-style-type: none;"></ul>
     </div>
-    <div id="currentMoveDiv" style="font-size: 400%;"></div>
-    <ul id="historyUl" style="padding: 0px; list-style-type: none;"></ul>
     <input id="showMovementRulesButton" type="button" value="Hide Movement Rules">
-    <div id="movementRulesDiv">
+    <div id="theMovementRulesDiv">
       Thief movement rules (in this order):
       <ol>
         <li>For each CLUE, the thief will either MOVE or WAIT. (See Probabilities.)</li>
@@ -49,7 +48,7 @@
       </ol>
     </div>
     <input id="showProbabilitiesButton" type="button" value="Hide Probabilities">
-    <div id="probabilitiesDiv">
+    <div id="theProbabilitiesDiv">
       Probabilities:
       <ul>
         <li><label>Chance to MOVE on each CLUE: <input id="moveChanceTextbox" value="???"></label></li>

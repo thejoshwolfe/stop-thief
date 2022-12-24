@@ -510,10 +510,12 @@ function handleNewGame() {
   // TODO
 }
 function handleTip() {
-  // TODO
+  // TODO: check if game is running.
+  doTip();
 }
 function handleArrest() {
-  // TODO
+  // TODO: check if game is running.
+  doArrest();
 }
 function handleClue() {
   // TODO: check if game is running.
@@ -525,9 +527,6 @@ function handleNumber(number) {
 
 
 const mapCanvas = document.getElementById("mapCanvas");
-const tipButton = document.getElementById("tipButton");
-const arrestButton = document.getElementById("arrestButton");
-const clueButton = document.getElementById("clueButton");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
 
@@ -538,8 +537,10 @@ var persistentState = {
     runFarther: 0.5,
   },
   ui: {
-    showMovementGraph: true,
-    showThiefMovement: true,
+    showMap: false,
+    showMovementGraph: false,
+    showThiefMovement: false,
+    showClueHistory: true,
     showMovementRules: true,
     showProbabilities: true,
   },
@@ -582,27 +583,21 @@ function saveState() {
 });
 
 // Show/hide UI sections.
-const showMovementRulesButton = document.getElementById("showMovementRulesButton");
-const movementRulesDiv = document.getElementById("movementRulesDiv");
-showMovementRulesButton.addEventListener("click", function() {
-  setTimeout(function() {
-    persistentState.ui.showMovementRules = !persistentState.ui.showMovementRules;
+["Map", "ClueHistory", "MovementRules", "Probabilities"].forEach(name => {
+  const button = document.getElementById("show" + name + "Button");
+  const div = document.getElementById("the" + name + "Div");
+  const propertyName = "show" + name;
+  button.addEventListener("click", function() {
+    persistentState.ui[propertyName] = !persistentState.ui[propertyName];
     saveState();
-    maybeShowElement(movementRulesDiv, persistentState.ui.showMovementRules);
-  }, 0);
+    showHide();
+  });
+  showHide();
+  function showHide() {
+    div.style.display = persistentState.ui[propertyName] ? "block" : "none";
+    button.value = (persistentState.ui[propertyName] ? "Hide" : "Show") + button.value.slice(4);
+  }
 });
-maybeShowElement(movementRulesDiv, persistentState.ui.showMovementRules);
-
-const showProbabilitiesButton = document.getElementById("showProbabilitiesButton");
-const probabilitiesDiv = document.getElementById("probabilitiesDiv");
-showProbabilitiesButton.addEventListener("click", function() {
-  setTimeout(function() {
-    persistentState.ui.showProbabilities = !persistentState.ui.showProbabilities;
-    saveState();
-    maybeShowElement(probabilitiesDiv, persistentState.ui.showProbabilities);
-  }, 0);
-});
-maybeShowElement(probabilitiesDiv, persistentState.ui.showProbabilities);
 
 function maybeShowElement(element, showIt) {
   element.style.display = showIt ? "block" : "none";
@@ -781,21 +776,23 @@ function computeMapLayout() {
   }
 }
 
-tipButton.addEventListener("click", function() {
+function doTip() {
   let currentRoom = movementHistory[movementHistory.length - 1]
   if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
+  // TODO: use LCD display instead
   let formattedSpace = exactSpaceNumber[0] + "-" + exactSpaceNumber[1] + exactSpaceNumber[2];
   if (confirm("--> The tip will appear right here <--")) {
     alert(formattedSpace);
   }
-});
+}
 
-arrestButton.addEventListener("click", function() {
+function doArrest() {
   let currentRoom = movementHistory[movementHistory.length - 1]
   if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
 
+  // TODO: use LCD input
   let guess = prompt("Input three digits, e.g. 5-67 or 567");
   if (guess == null || guess.length === 0) return;
   // strip '-' and any other non-digit characters.
@@ -804,6 +801,7 @@ arrestButton.addEventListener("click", function() {
     alert("incorrect formatting");
     return;
   }
+  // TODO: sounds and stuff
   if (guess !== exactSpaceNumber.join("")) {
     alert("wrong");
   } else {
@@ -821,14 +819,13 @@ arrestButton.addEventListener("click", function() {
       render();
     }
   }
-});
+}
 
 // TODO: move all this to persistentState.
 var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
 var waitTimeHere = 0;
-clueButton.addEventListener("click", handleClue);
 
 function doClue() {
   if (movementHistory.length === 0 || Math.random() < persistentState.probabilities.move) {
