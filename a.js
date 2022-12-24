@@ -1024,7 +1024,14 @@ function renderHistory() {
     currentMoveDiv.textContent = displayText;
   } else {
     listedHistory = clueHistory.slice(0, clueHistory.length - 1);
-    currentMoveDiv.textContent = clueHistory[clueHistory.length - 1] || "";
+    if (clueHistory.length > 0) {
+      currentMoveDiv.textContent = clueHistory.length + ". " + clueHistory[clueHistory.length - 1];
+    } else {
+      currentMoveDiv.textContent = "";
+    }
+  }
+  for (let i = 0; i < listedHistory.length; i++) {
+    listedHistory[i] = (i + 1) + ". " + listedHistory[i];
   }
   listedHistory.reverse();
   var historyHtml = "";
