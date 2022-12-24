@@ -335,7 +335,19 @@ window.addEventListener("keydown", function(event) {
     case "Backspace":
       if (modifiers === 0) {
         event.preventDefault();
-        // TODO: backspace typed numbers.
+        if (partialInputPrompt != null) {
+          if (partialInputPrompt.length === 0) {
+            // Back out of the arrest prompt.
+            partialInputPrompt = null;
+          } else {
+            // Backspace one letter.
+            partialInputPrompt = partialInputPrompt.substr(0, partialInputPrompt.length - 1);
+          }
+          // Button press sound.
+          playSequence([
+            [sounds.Wait],
+          ]);
+        }
       }
       break;
     case "T": case "t":
@@ -362,10 +374,14 @@ window.addEventListener("keydown", function(event) {
 function isGameInProgress() {
   return persistentState.game.movementHistory.length > 0 && !persistentState.game.arrested;
 }
+function isInputPromptInProgress() {
+  return partialInputPrompt != null;
+}
 
 let animationsInProgress = [];
 let animatedLcd = null;
 let blinkHandle = null;
+let partialInputPrompt = null;
 function isUiResponsive() {
   return animationsInProgress.length === 0;
 }
@@ -450,7 +466,9 @@ function playSequence(sequence) {
         node.start(audioCtx.currentTime + t);
       }
 
-      animateLcd(lcd, t);
+      if (lcd != null) {
+        animateLcd(lcd, t);
+      }
 
       t += buffer.length / audioCtx.sampleRate;
       if (extraDelay != null) {
@@ -471,6 +489,7 @@ function getDisplayText() {
     }
   }
   if (animatedLcd != null) return animatedLcd;
+  if (partialInputPrompt != null) return partialInputPrompt + "_";
   if (persistentState.game.arrested) return "";
 
   const {clueHistory} = persistentState.game;
@@ -635,6 +654,7 @@ function handleSettings() {
 }
 function handleNewGame() {
   if (!isUiResponsive()) return;
+  if (isInputPromptInProgress()) return;
   if (isGameInProgress()) {
     if (!confirm("Start new game?")) return;
   }
@@ -653,19 +673,39 @@ function handleNewGame() {
   render();
 }
 function handleTip() {
-  if (!(isUiResponsive() && isGameInProgress())) return;
+  if (!(isUiResponsive() && isGameInProgress() && !isInputPromptInProgress())) return;
   doTip();
 }
 function handleArrest() {
   if (!(isUiResponsive() && isGameInProgress())) return;
-  doArrest();
+  if (isInputPromptInProgress()) {
+    // back out of the arrest prompt.
+    partialInputPrompt = null;
+    // Button press sound.
+    playSequence([
+      [sounds.Wait],
+    ]);
+  } else {
+    startArrestPrompt();
+  }
 }
 function handleClue() {
-  if (!(isUiResponsive() && isGameInProgress())) return;
+  if (!(isUiResponsive() && isGameInProgress() && !isInputPromptInProgress())) return;
   doClue();
 }
 function handleNumber(number) {
-  // TODO
+  if (!isInputPromptInProgress()) return;
+  partialInputPrompt += number;
+  if (partialInputPrompt.length === 3) {
+    const guess = partialInputPrompt;
+    partialInputPrompt = null;
+    doArrest(guess);
+  } else {
+    // Button press sound.
+    playSequence([
+      [sounds.Wait],
+    ]);
+  }
 }
 
 
@@ -944,26 +984,23 @@ function doTip() {
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
   const lcd = exactSpaceNumber.join("");
   playSequence([
-    [sounds.Tip, lcd, 5],
+    [sounds.Tip, lcd, 3],
   ]);
 }
 
-function doArrest() {
+function startArrestPrompt() {
+  // prompt for input.
+  partialInputPrompt = "";
+  // Button press sound.
+  playSequence([
+    [sounds.Wait],
+  ]);
+}
+function doArrest(guess) {
   let currentRoom = getCurrentRoom()
-  if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
 
-  // TODO: use LCD input
-  let guess = prompt("Input three digits, e.g. 5-67 or 567");
-  if (guess == null || guess.length === 0) return;
-  // strip '-' and any other non-digit characters.
-  guess = guess.replace(/\D+/g, "");
-  if (guess.length !== 3) {
-    alert("incorrect formatting");
-    return;
-  }
   const animations = ["Arrest"];
-  // TODO: sounds and stuff
   if (guess !== exactSpaceNumber.join("")) {
     animations.push("Wrong");
   } else {
