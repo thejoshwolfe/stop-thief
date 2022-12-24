@@ -10,9 +10,6 @@ http://wolfesoftware.com/stop-thief/
 
 Mechanically, the app is technically feature complete, but looks terrible and has numerous usability issues.
 
-* TODO: persist game state through refreshes.
-* TODO: allow starting a new game without refreshing the page, including after a successful (and compliant) arrest.
-    * TODO: game starts on new game button, not on Clue button.
 * TODO: (optional) adjust AI to enable circling crime spaces but not moving away rather than immediately moving into them.
 * TODO: thief should exit the subway immediately after entering it, not waiting for another clue.
 

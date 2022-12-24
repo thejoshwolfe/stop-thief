@@ -354,10 +354,11 @@ window.addEventListener("keydown", function(event) {
 function getDisplayText() {
   let displayText = "";
 
-  if (movementHistory.length === 0) return "";
-  const currentRoom = movementHistory[movementHistory.length - 1];
+  const currentRoom = getCurrentRoom();
+  if (currentRoom == null) return "";
   if (currentRoom === theSubway) return "";
 
+  // TODO: This is wrong. we need to use clueHistory so that looted C spaces are Fl.
   const buildingNumber = getExactSpaceNumber(currentRoom)[0];
   const roomCode = gameBoardString[currentRoom];
   displayText += buildingNumber;
@@ -507,7 +508,18 @@ function handleSettings() {
   }
 }
 function handleNewGame() {
-  // TODO
+  // TODO: sometimes confirm.
+  persistentState.game = {
+    movementHistory: [],
+    remainingLoot: [],
+    waitTimeHere: 0,
+    clueHistory: [],
+  };
+  makeAMove(true);
+  saveState();
+  renderMap();
+  renderHistory();
+  render();
 }
 function handleTip() {
   // TODO: check if game is running.
@@ -530,7 +542,14 @@ const mapCanvas = document.getElementById("mapCanvas");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
 
+// TODO: move all this to persistentState.
 var persistentState = {
+  game: {
+    movementHistory: [],
+    remainingLoot: [],
+    waitTimeHere: 0,
+    clueHistory: [],
+  },
   probabilities: {
     move: 0.75,
     comply: 0.5,
@@ -777,7 +796,7 @@ function computeMapLayout() {
 }
 
 function doTip() {
-  let currentRoom = movementHistory[movementHistory.length - 1]
+  let currentRoom = getCurrentRoom();
   if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
   // TODO: use LCD display instead
@@ -788,7 +807,7 @@ function doTip() {
 }
 
 function doArrest() {
-  let currentRoom = movementHistory[movementHistory.length - 1]
+  let currentRoom = getCurrentRoom()
   if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
 
@@ -821,24 +840,25 @@ function doArrest() {
   }
 }
 
-// TODO: move all this to persistentState.
-var movementHistory = [];
-var remainingLoot = [];
-var clueHistory = [];
-var waitTimeHere = 0;
+function getCurrentRoom() {
+  const movementHistory = persistentState.game.movementHistory;
+  if (movementHistory.length === 0) return null;
+  return movementHistory[movementHistory.length - 1];
+}
 
 function doClue() {
-  if (movementHistory.length === 0 || Math.random() < persistentState.probabilities.move) {
+  if (Math.random() < persistentState.probabilities.move) {
     makeAMove(true);
     renderMap();
   } else {
     // Wait
-    waitTimeHere++;
+    persistentState.game.waitTimeHere++;
   }
   renderHistory();
   render();
 }
 function makeAMove(showBuildingNumber) {
+  const {movementHistory, remainingLoot, clueHistory} = persistentState.game;
   if (movementHistory.length === 0) {
     // start
     let startingRoomOptions = [];
@@ -910,14 +930,15 @@ function makeAMove(showBuildingNumber) {
       }
     }
   }
-  waitTimeHere = 0;
+  persistentState.game.waitTimeHere = 0;
+  saveState();
 }
 
 function renderMove(room, showBuildingNumber) {
   if (room === theSubway) return "The Subway";
   var typeCode = gameBoardString[room];
-  if (typeCode === "C" && remainingLoot.indexOf(room) === -1) {
-    // this spaces has been robbed.
+  if (typeCode === "C" && persistentState.game.remainingLoot.indexOf(room) === -1) {
+    // this space has been robbed.
     if (room === newsStand) {
       typeCode = "S";
     } else {
@@ -1013,6 +1034,7 @@ function getExactSpaceNumber(room) {
 }
 
 function renderHistory() {
+  const {waitTimeHere, clueHistory} = persistentState.game;
   let listedHistory;
   if (waitTimeHere > 0) {
     listedHistory = clueHistory.slice();
@@ -1020,7 +1042,7 @@ function renderHistory() {
     if (waitTimeHere > 1) {
       displayText += " x" + waitTimeHere;
     }
-    displayText += " (" + renderBuildingNumber(getBuildingNumber(movementHistory[movementHistory.length - 1])) + ")";
+    displayText += " (" + renderBuildingNumber(getBuildingNumber(getCurrentRoom())) + ")";
     currentMoveDiv.textContent = displayText;
   } else {
     listedHistory = clueHistory.slice(0, clueHistory.length - 1);
@@ -1122,6 +1144,7 @@ function renderMap() {
   }
 
   if (persistentState.ui.showThiefMovement) {
+    const movementHistory = persistentState.game.movementHistory;
     if (movementHistory.length > 0) {
       context.fillStyle = context.strokeStyle = "#f3a6ff";
       context.lineWidth = tileSize / 10;
@@ -1156,7 +1179,7 @@ function renderMap() {
           context.stroke();
         }
       }
-      let currentRoom = movementHistory[movementHistory.length - 1];
+      let currentRoom = getCurrentRoom();
       if (currentRoom !== theSubway) {
         // Big circle around current location.
         context.lineWidth = tileSize / 6;
@@ -1205,6 +1228,7 @@ function randomArrayItem(array) {
 function init() {
   computeMapLayout();
   renderMap();
+  renderHistory();
 }
 
 init();
