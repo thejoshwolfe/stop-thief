@@ -496,4 +496,64 @@ const sounds = {
 
     return duration;
   },
+
+  Run() {
+    const duration = 1.7;
+    const sampleRate = audioCtx.sampleRate;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
+
+    const noteDuration = duration / 10;
+    const noteFrequencies = [
+      220 * Math.pow(2, 3.5/12), // C half sharp
+      220 * Math.pow(2, 3.5/12), // C half sharp
+      220 * Math.pow(2, 0.5/12), // A half sharp
+      220 * Math.pow(2, 5.5/12), // D half sharp
+      220 * Math.pow(2, 3.5/12), // C half sharp
+      220 * Math.pow(2, 0.5/12), // A half sharp
+    ];
+    const noteTimes = [
+      noteDuration * 0,
+      noteDuration * 1,
+      noteDuration * 2,
+      noteDuration * 3,
+      noteDuration * 4,
+      noteDuration * 6,
+
+      999,
+    ];
+    const noteDurations = [
+      noteDuration * 0.9,
+      noteDuration,
+      noteDuration,
+      noteDuration,
+      noteDuration * 2,
+      noteDuration * 3.5,
+
+      999,
+    ];
+
+    const noteEnds = noteTimes.map((t, i) => t + noteDurations[i]);
+
+    const data = buffer.getChannelData(0);
+    let noteCursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t >= noteTimes[noteCursor + 1]) {
+        noteCursor = noteCursor + 1;
+      }
+      if (t > noteEnds[noteCursor]) {
+        data[i] = 0.0;
+      } else {
+        const f = noteFrequencies[noteCursor];
+        data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
 };
