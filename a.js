@@ -354,11 +354,132 @@ window.addEventListener("keydown", function(event) {
 function render() {
   const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
   const context = crimeScannerCanvas.getContext("2d");
-
   context.drawImage(machineImage, 0, 0);
 
-  // TODO: LCD numbers
+  let displayText = "8";
+
+  const roomCode = "S"; // TODO
+  displayText += function() {
+    switch (roomCode) {
+      case "S": return "St";
+      case "F": return "Fl";
+      case "C": return "Cr";
+      case "W": return "Gl";
+      case "D": return "dr";
+    }
+  }();
+
+  for (let i = 0; i < displayText.length; i++) {
+    renderSevenSegmentDisplay(i, displayText[i]);
+  }
+
+  function renderSevenSegmentDisplay(index, char) {
+    // bottom left corner
+    const x = [375, 551, 636][index];
+    const y = 232;
+    const width = 8;
+    //  0
+    // 5 1
+    //  6
+    // 4 2
+    //  3
+    const segments = function() {
+      switch (char) {
+        case "0": return [1,1,1,1,1,1,0];
+        case "1": return [0,1,1,0,0,0,0];
+        case "2": return [1,1,0,1,1,0,1];
+        case "3": return [1,1,1,1,0,0,1];
+        case "4": return [0,1,1,0,0,1,1];
+        case "5": return [1,0,1,1,0,1,1];
+        case "6": return [0,0,1,1,1,1,1];
+        case "7": return [1,1,1,0,0,0,0];
+        case "8": return [1,1,1,1,1,1,1];
+        case "9": return [1,1,1,0,0,1,1];
+
+        case "C": return [1,0,0,1,1,1,0];
+        case "F": return [1,0,0,0,1,1,1];
+        case "G": return [0,0,1,1,1,1,0];
+        case "S": return [1,0,1,1,0,1,1];
+        case "d": return [0,1,1,1,1,0,1];
+        case "r": return [0,0,0,0,1,0,1];
+        case "l": return [0,0,0,0,1,1,0];
+        case "t": return [0,0,0,1,1,1,1];
+      }
+    }();
+    context.fillStyle = "#f22";
+    if (segments[0] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 6.5);
+      context.lineTo(x + width * 1.0, y - width * 7.0);
+      context.lineTo(x + width * 3.0, y - width * 7.0);
+      context.lineTo(x + width * 3.5, y - width * 6.5);
+      context.lineTo(x + width * 3.0, y - width * 6.0);
+      context.lineTo(x + width * 1.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[1] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 3.5, y - width * 6.5);
+      context.lineTo(x + width * 4.0, y - width * 6.0);
+      context.lineTo(x + width * 4.0, y - width * 4.0);
+      context.lineTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 3.0, y - width * 4.0);
+      context.lineTo(x + width * 3.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[2] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 4.0, y - width * 3.0);
+      context.lineTo(x + width * 4.0, y - width * 1.0);
+      context.lineTo(x + width * 3.5, y - width * 0.5);
+      context.lineTo(x + width * 3.0, y - width * 1.0);
+      context.lineTo(x + width * 3.0, y - width * 3.0);
+      context.fill();
+    }
+    if (segments[3] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 0.5);
+      context.lineTo(x + width * 1.0, y - width * 1.0);
+      context.lineTo(x + width * 3.0, y - width * 1.0);
+      context.lineTo(x + width * 3.5, y - width * 0.5);
+      context.lineTo(x + width * 3.0, y - width * 0.0);
+      context.lineTo(x + width * 1.0, y - width * 0.0);
+      context.fill();
+    }
+    if (segments[4] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 1.0, y - width * 3.0);
+      context.lineTo(x + width * 1.0, y - width * 1.0);
+      context.lineTo(x + width * 0.5, y - width * 0.5);
+      context.lineTo(x + width * 0.0, y - width * 1.0);
+      context.lineTo(x + width * 0.0, y - width * 3.0);
+      context.fill();
+    }
+    if (segments[5] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 6.5);
+      context.lineTo(x + width * 1.0, y - width * 6.0);
+      context.lineTo(x + width * 1.0, y - width * 4.0);
+      context.lineTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 0.0, y - width * 4.0);
+      context.lineTo(x + width * 0.0, y - width * 6.0);
+      context.fill();
+    }
+    if (segments[6] === 1) {
+      context.beginPath();
+      context.moveTo(x + width * 0.5, y - width * 3.5);
+      context.lineTo(x + width * 1.0, y - width * 4.0);
+      context.lineTo(x + width * 3.0, y - width * 4.0);
+      context.lineTo(x + width * 3.5, y - width * 3.5);
+      context.lineTo(x + width * 3.0, y - width * 3.0);
+      context.lineTo(x + width * 1.0, y - width * 3.0);
+      context.fill();
+    }
+  }
 }
+
 
 
 function handleSettings() {
