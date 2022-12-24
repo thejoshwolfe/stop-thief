@@ -365,16 +365,24 @@ function isGameInProgress() {
 
 let animationsInProgress = [];
 let animatedLcd = null;
+let blinkHandle = null;
 function isUiResponsive() {
   return animationsInProgress.length === 0;
 }
 function animateLcd(lcd, timeFromNowInSeconds) {
   const handle = setTimeout(function() {
     animatedLcd = lcd;
-    render();
     removeFromArray(animationsInProgress, handle);
+    if (animationsInProgress.length === 0) {
+      clearInterval(blinkHandle);
+      blinkHandle = null;
+    }
+    render();
   }, timeFromNowInSeconds * 1000);
   animationsInProgress.push(handle);
+  if (blinkHandle == null) {
+    blinkHandle = setInterval(render, 1000 * 0.1);
+  }
 }
 function completeAnimation(timeFromNowInSeconds) {
   animateLcd(null, timeFromNowInSeconds);
@@ -403,7 +411,8 @@ function playAnimations(animations) {
         sequence.push([sounds.Run, " rn"]);
         continue;
       case "Wait":
-        sequence.push([sounds.Wait, null, 1.5]);
+        const {clueHistory} = persistentState.game;
+        sequence.push([sounds.Wait, clueHistory[clueHistory.length - 1][0] + "--", 1.0]);
         continue;
     }
     // It's a clue
@@ -451,6 +460,14 @@ function playSequence(sequence) {
 }
 
 function getDisplayText() {
+  if (animationsInProgress.length > 0) {
+    // Blink.
+    const period = 0.4;
+    const blinkTime = (new Date().getTime() / 1000) % period
+    if (blinkTime < 0.1) {
+      return "";
+    }
+  }
   if (animatedLcd != null) return animatedLcd;
   let displayText = "";
 
