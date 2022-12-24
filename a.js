@@ -54,11 +54,11 @@ function _generateMachine() {
   context.beginPath();
   context.roundRect(105, 45, 790, 620, 50);
   context.fill();
-  context.fillStyle = "#422";
+  context.fillStyle = "#211";
   context.beginPath();
   context.roundRect(140, 80, 720, 550, 18);
   context.fill();
-  context.fillStyle = "#7c0616";
+  context.fillStyle = "#400616";
   context.beginPath();
   context.roundRect(291, 120, 434, 186, 2);
   context.fill();
