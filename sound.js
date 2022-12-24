@@ -427,6 +427,37 @@ const sounds = {
     return duration;
   },
 
+  ArrestCorrect() {
+    const duration = 2.4;
+    const sampleRate = audioCtx.sampleRate;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
+
+    // 4(6)6(6)8
+    const pewPeriod = duration / 30;
+
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      const bulletIndex = Math.floor(t / pewPeriod);
+      if (4 <= bulletIndex && bulletIndex < 10) {
+        data[i] = 0;
+      } else if (16 <= bulletIndex && bulletIndex < 22) {
+        data[i] = 0;
+      } else {
+        const pewTime = t % pewPeriod;
+        const f = 800 - 300 * pewTime / pewPeriod;
+        data[i] = volume * Math.sign(Math.sin(pewTime * twoPi * f) + Math.sin(pewTime * twoPi * f * majorSecond));
+      }
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
+
   Comply() {
     const duration = 3.85;
     const sampleRate = audioCtx.sampleRate;
