@@ -406,7 +406,8 @@ function completeAnimation(timeFromNowInSeconds) {
 
 function playAnimations(animations) {
   const sequence = [];
-  for (let animation of animations) {
+  for (let i = 0; i < animations.length; i++) {
+    let animation = animations[i];
     switch (animation) {
       case "Arrest":
         sequence.push([sounds.Arrest, " PL"]);
@@ -434,8 +435,13 @@ function playAnimations(animations) {
     // It's a clue
     if (animation.length !== 2) throw new Error("unexpected animation: " + animation);
     if (sequence.length > 0) {
-      // part of a RUN
-      sequence.push(0.4);
+      if (animation[1] === "S" && i > 0 && animations[i - 1] === " b") {
+        // Exiting the subway.
+        sequence.push(0.2);
+      } else {
+        // Spacing between legs of a RUN.
+        sequence.push(0.4);
+      }
     }
     sequence.push(function() {
       switch (animation[1]) {
@@ -541,7 +547,7 @@ function render() {
         case "3": return [1,1,1,1,0,0,1];
         case "4": return [0,1,1,0,0,1,1];
         case "5": return [1,0,1,1,0,1,1];
-        case "6": return [0,0,1,1,1,1,1];
+        case "6": return [1,0,1,1,1,1,1];
         case "7": return [1,1,1,0,0,0,0];
         case "8": return [1,1,1,1,1,1,1];
         case "9": return [1,1,1,0,0,1,1];
@@ -666,7 +672,7 @@ function handleNewGame() {
     clueHistory: [],
     arrested: false,
   };
-  playAnimations([makeAMove(true)]);
+  playAnimations(makeAMove(true));
   saveState();
   renderMap();
   renderHistory();
@@ -1013,9 +1019,9 @@ function doArrest(guess) {
       animations.push("Run");
       let runFarther = Math.random() < persistentState.probabilities.runFarther;
       for (let i = 0; i < 5 + runFarther - 1; i++) {
-        animations.push(makeAMove(false));
+        animations.push(...makeAMove(false));
       }
-      animations.push(makeAMove(true));
+      animations.push(...makeAMove(true));
       renderHistory();
       renderMap();
       render();
@@ -1032,7 +1038,7 @@ function getCurrentRoom() {
 
 function doClue() {
   if (Math.random() < persistentState.probabilities.move) {
-    playAnimations([makeAMove(true)]);
+    playAnimations(makeAMove(true));
     renderMap();
   } else {
     // Wait
@@ -1043,6 +1049,14 @@ function doClue() {
   render();
 }
 function makeAMove(showBuildingNumber) {
+  const clues = [];
+  clues.push(makeASingleMove(showBuildingNumber));
+  if (getCurrentRoom() == theSubway) {
+    clues.push(makeASingleMove(showBuildingNumber));
+  }
+  return clues;
+}
+function makeASingleMove(showBuildingNumber) {
   const {movementHistory, remainingLoot, clueHistory} = persistentState.game;
   let clue;
   if (movementHistory.length === 0) {
