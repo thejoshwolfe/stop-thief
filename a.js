@@ -1,3 +1,238 @@
+function resize() {
+  const backgroundDiv = document.getElementById("crimeScannerBackgroundDiv");
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const backgroundWidth = backgroundDiv.clientWidth;
+  const backgroundHeight = backgroundDiv.clientHeight;
+  const backgroundAspectRatio = backgroundWidth / backgroundHeight;
+  const foregroundAspectRatio = crimeScannerCanvas.width / crimeScannerCanvas.height;
+  if (backgroundAspectRatio < foregroundAspectRatio) {
+    // Width limited.
+    crimeScannerCanvas.style.width = backgroundWidth;
+    const scaledHeight = backgroundWidth / foregroundAspectRatio;
+    crimeScannerCanvas.style.height = scaledHeight + "px";
+    crimeScannerCanvas.style.left = "0px";
+    crimeScannerCanvas.style.top = Math.floor((backgroundHeight - scaledHeight) / 2) + "px";
+  } else {
+    // Height limited.
+    crimeScannerCanvas.style.height = backgroundHeight;
+    const scaledWidth = backgroundHeight * foregroundAspectRatio;
+    crimeScannerCanvas.style.width = scaledWidth + "px";
+    crimeScannerCanvas.style.top = "0px";
+    crimeScannerCanvas.style.left = Math.floor((backgroundWidth - scaledWidth) / 2) + "px";
+  }
+
+  render();
+}
+setTimeout(resize, 0);
+window.addEventListener("resize", resize);
+
+function render() {
+  let code = "";
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const context = crimeScannerCanvas.getContext("2d");
+  context.fillStyle = "#222";
+  context.fillRect(0, 0, crimeScannerCanvas.width, crimeScannerCanvas.height);
+
+  // LCD background and frame.
+  context.fillStyle = "#111";
+  context.beginPath();
+  context.roundRect(105, 45, 790, 620, 50);
+  context.fill();
+  context.fillStyle = "#422";
+  context.beginPath();
+  context.roundRect(140, 80, 720, 550, 18);
+  context.fill();
+  context.fillStyle = "#7c0616";
+  context.beginPath();
+  context.roundRect(291, 120, 434, 186, 2);
+  context.fill();
+
+  // LCD painted overlay.
+  context.strokeStyle = "#ddd";
+  context.fillStyle = "#ddd";
+  context.lineWidth = 12;
+  // Border and stripes.
+  context.beginPath();
+  context.roundRect(175, 115, 650, 480, 14);
+  context.moveTo(175, 320);
+  context.lineTo(825, 320);
+  context.moveTo(175, 350);
+  context.lineTo(825, 350);
+  context.stroke();
+  // Text.
+  context.font = "bold 37px sans-serif";
+  context.fillText("BLDG.", 205, 197, 117);
+  context.lineWidth = 4;
+  context.moveTo(188, 203); context.lineTo(333, 203);
+  context.stroke();
+  context.fillText("STREET", 188, 236, 145);
+  context.fillText("LOC.", 684, 222, 90);
+  context.font = "bold 70px sans-serif";
+  context.fillText("ELECTRONIC", 282, 464, 436);
+  context.fillText("CRIME SCANNER", 197, 528, 571);
+  context.font = "bold 25px sans-serif";
+  context.fillText("TM", 768, 500, 35);
+
+  // Button frame.
+  context.fillStyle = "#111";
+  context.beginPath();
+  context.roundRect(0, 716, 1000, 1484, 60);
+  context.fill();
+  context.fillStyle = "#222";
+  context.beginPath();
+  context.roundRect(35, 751, 930, 1414, 25);
+  context.fill();
+
+  // Button grid.
+  const buttonNames = [
+    "1", "2", "Off",
+    "3", "4", "On",
+    "5", "6", "Tip",
+    "7", "8", "Arrest",
+    "9", "0", "Clue",
+  ];
+  const white = "#dfdeda";
+  const buttonColors = function() {
+    const c1 = "#e2bd3a";
+    const c2 = "#e99c0e";
+    const c3 = "#d68647";
+    const c4 = "#d84334";
+    const c5 = c4;
+    const c6 = "#ad2764";
+    const c7 = "#6a243c";
+    const c8 = "#1f2058";
+    const c9 = "#0e4780";
+    const c0 = "#114739";
+    const tip = c4;
+    const arrest = c3;
+    const clue = c1;
+    return [
+      c1,c2, c1,c2, white,white,
+      c3,c4, c3,c4, white,white,
+      c5,c6, c5,c6, tip,tip,
+      c7,c8, c7,c8, arrest,arrest,
+      c9,c0, c9,c0, clue,clue,
+    ];
+  }();
+  code += "const buttonBoundingBoxes = {\n";
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 3; c++) {
+      let i = r * 3 + c;
+      let x = 35 + 125 + (182+67) * c - 22/2;
+      let y = 751 + 62 + (187+72) * r - 22/2;
+      let width = 182+22;
+      let height = 187+22;
+
+      // Two-color background.
+      const colorTop    = buttonColors[2*i];
+      const colorBottom = buttonColors[2*i + 1];
+      context.fillStyle = colorTop;
+      context.fillRect(x, y, width, height);
+      if (colorTop !== colorBottom) {
+        context.fillStyle = colorBottom;
+        context.fillRect(x, y + height/2, width, height/2);
+      }
+
+      // Text.
+      switch (buttonNames[i]) {
+        case "1": case "2": case "3": case "4": case "5":
+        case "6": case "7": case "8": case "9": case "0":
+          context.fillStyle = white;
+          context.font = "bold 170px FreeSans";
+          context.fillText(buttonNames[i], x + 56, y + 164);
+          break;
+        case "Off":
+          context.fillStyle = "#407986";
+          // Hambuger.
+          //context.fillRect(x + width/2 - 50, y + height*1/4 -  0, 100, 26);
+          //context.fillRect(x + width/2 - 50, y + height*2/4 - 15, 100, 26);
+          //context.fillRect(x + width/2 - 50, y + height*3/4 - 30, 100, 26);
+          // The word SETT-INGS.
+          //context.font = "bold 30px FreeSans";
+          //context.fillText("SETT", x + 56, y + 100);
+          //context.fillText("INGS", x + 56, y + 150);
+          // A gear.
+          context.save();
+          {
+            context.strokeStyle = context.fillStyle;
+            context.lineWidth = 5;
+            context.lineJoin = "round";
+            context.beginPath();
+            const cx = x + width/2;
+            const cy = y + height/2;
+            const slice_angle = 2*Math.PI/8;
+            const r_out = 56;
+            const r_mid = 43;
+            const r_min = 30;
+            const tooth_width = 0.4;
+            const slope_width = 0.1;
+            const base_width  = 0.4;
+            for (let i = 0; i < 9; i++) {
+              context.arc(cx, cy, r_out,
+                slice_angle * (-tooth_width/2 + i),
+                slice_angle * (-tooth_width/2 + i + tooth_width),
+              );
+              if (i === 8) break;
+              context.arc(cx, cy, r_mid,
+                slice_angle * (-tooth_width/2 + i + tooth_width + slope_width),
+                slice_angle * (-tooth_width/2 + i + tooth_width + slope_width + base_width),
+              );
+            }
+            context.arc(cx, cy, r_min, 0, 2 * Math.PI, true);
+            context.fill();
+            context.stroke();
+          }
+          context.restore();
+          break;
+        case "On":
+          context.fillStyle = "#d06951";
+          context.font = "bold 60px FreeSans";
+          context.fillText("ON", x + 58, y + 126);
+          break;
+        case "Tip":
+          // Ultra narrow letter T.
+          context.fillStyle = white;
+          context.fillRect(x + 76, y + 35, 54, 24);
+          context.fillRect(x + 91, y + 35, 24, 106);
+          // The word TIP.
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("TIP", x + 81, y + 168);
+          break;
+        case "Arrest":
+          context.fillStyle = white;
+          context.font = "bold 130px FreeSans";
+          context.fillText("A", x + 56, y + 140);
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("ARREST", x + 49, y + 168);
+          break;
+        case "Clue":
+          context.fillStyle = white;
+          context.font = "bold 130px FreeSans";
+          context.fillText("C", x + 56, y + 140);
+          context.fillStyle = "#111";
+          context.font = "bold 27px FreeSans";
+          context.fillText("CLUE", x + 67, y + 168);
+          break;
+        default: throw new Error("not handled: " + buttonNames[i]);
+      }
+
+      // Border.
+      context.strokeStyle = "#111";
+      context.lineWidth = 22;
+      context.beginPath();
+      context.roundRect(x, y, width, height, 22);
+      context.stroke();
+
+      code += `  "${buttonNames[i]}": [${x}, ${y}, ${width}, ${height}],\n`;
+    }
+  }
+  code += "}\n";
+}
+
+
+
 const mapCanvas = document.getElementById("mapCanvas");
 const tipButton = document.getElementById("tipButton");
 const arrestButton = document.getElementById("arrestButton");
