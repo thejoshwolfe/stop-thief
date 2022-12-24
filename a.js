@@ -5,20 +5,35 @@ function resize() {
   const backgroundHeight = backgroundDiv.clientHeight;
   const backgroundAspectRatio = backgroundWidth / backgroundHeight;
   const foregroundAspectRatio = crimeScannerCanvas.width / crimeScannerCanvas.height;
+  let scale;
+  let x, y;
   if (backgroundAspectRatio < foregroundAspectRatio) {
     // Width limited.
+    scale = backgroundWidth / crimeScannerCanvas.width;
     crimeScannerCanvas.style.width = backgroundWidth;
     const scaledHeight = backgroundWidth / foregroundAspectRatio;
     crimeScannerCanvas.style.height = scaledHeight + "px";
-    crimeScannerCanvas.style.left = "0px";
-    crimeScannerCanvas.style.top = Math.floor((backgroundHeight - scaledHeight) / 2) + "px";
+    x = 0;
+    y = Math.floor((backgroundHeight - scaledHeight) / 2);
   } else {
     // Height limited.
+    scale = backgroundHeight / crimeScannerCanvas.height;
     crimeScannerCanvas.style.height = backgroundHeight;
     const scaledWidth = backgroundHeight * foregroundAspectRatio;
     crimeScannerCanvas.style.width = scaledWidth + "px";
-    crimeScannerCanvas.style.top = "0px";
-    crimeScannerCanvas.style.left = Math.floor((backgroundWidth - scaledWidth) / 2) + "px";
+    x = Math.floor((backgroundWidth - scaledWidth) / 2);
+    y = 0;
+  }
+  crimeScannerCanvas.style.left = x + "px";
+  crimeScannerCanvas.style.top = y + "px";
+
+  // Position buttons.
+  for (let row of buttonBoundingBoxes) {
+    const button = document.getElementById("button" + row[0]);
+    button.style.left = (x + row[1] * scale) + "px";
+    button.style.top = (y + row[2] * scale) + "px";
+    button.style.width = row[3] * scale + "px";
+    button.style.height = row[4] * scale + "px";
   }
 
   render();
@@ -26,7 +41,8 @@ function resize() {
 setTimeout(resize, 0);
 window.addEventListener("resize", resize);
 
-function render() {
+// This can be called by devs to generate the thing.
+function _generateMachine() {
   let code = "";
   const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
   const context = crimeScannerCanvas.getContext("2d");
@@ -85,7 +101,7 @@ function render() {
 
   // Button grid.
   const buttonNames = [
-    "1", "2", "Off",
+    "1", "2", "Settings",
     "3", "4", "On",
     "5", "6", "Tip",
     "7", "8", "Arrest",
@@ -114,7 +130,7 @@ function render() {
       c9,c0, c9,c0, clue,clue,
     ];
   }();
-  code += "const buttonBoundingBoxes = {\n";
+  code += "const buttonBoundingBoxes = [\n";
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 3; c++) {
       let i = r * 3 + c;
@@ -141,16 +157,8 @@ function render() {
           context.font = "bold 170px FreeSans";
           context.fillText(buttonNames[i], x + 56, y + 164);
           break;
-        case "Off":
+        case "Settings":
           context.fillStyle = "#407986";
-          // Hambuger.
-          //context.fillRect(x + width/2 - 50, y + height*1/4 -  0, 100, 26);
-          //context.fillRect(x + width/2 - 50, y + height*2/4 - 15, 100, 26);
-          //context.fillRect(x + width/2 - 50, y + height*3/4 - 30, 100, 26);
-          // The word SETT-INGS.
-          //context.font = "bold 30px FreeSans";
-          //context.fillText("SETT", x + 56, y + 100);
-          //context.fillText("INGS", x + 56, y + 150);
           // A gear.
           context.save();
           {
@@ -225,10 +233,71 @@ function render() {
       context.roundRect(x, y, width, height, 22);
       context.stroke();
 
-      code += `  "${buttonNames[i]}": [${x}, ${y}, ${width}, ${height}],\n`;
+      code += `  ["${buttonNames[i]}", ${x}, ${y}, ${width}, ${height}],\n`;
     }
   }
-  code += "}\n";
+  code += "];\n";
+
+  console.log(code);
+}
+
+// Generated image:
+const machineImage = new Image();
+machineImage.addEventListener("load", render);
+machineImage.src = "electronic-crime-scanner.png";
+// Generated code:
+const buttonBoundingBoxes = [
+  ["1", 149, 802, 204, 209],
+  ["2", 398, 802, 204, 209],
+  ["Settings", 647, 802, 204, 209],
+  ["3", 149, 1061, 204, 209],
+  ["4", 398, 1061, 204, 209],
+  ["On", 647, 1061, 204, 209],
+  ["5", 149, 1320, 204, 209],
+  ["6", 398, 1320, 204, 209],
+  ["Tip", 647, 1320, 204, 209],
+  ["7", 149, 1579, 204, 209],
+  ["8", 398, 1579, 204, 209],
+  ["Arrest", 647, 1579, 204, 209],
+  ["9", 149, 1838, 204, 209],
+  ["0", 398, 1838, 204, 209],
+  ["Clue", 647, 1838, 204, 209],
+];
+// End generated code.
+
+buttonBoundingBoxes.forEach(row => {
+  const name = row[0];
+  const button = document.createElement("button");
+  button.id = "button" + name;
+  button.style.position = "absolute";
+  button.classList.add("invisibleButton");
+  // This might be findable by a screen reader or something:
+  button.textContent = name;
+  // It goes in the background div.
+  document.getElementById("crimeScannerBackgroundDiv").appendChild(button);
+  button.addEventListener("click", function() {
+    switch (name) {
+      case "1": case "2": case "3": case "4": case "5":
+      case "6": case "7": case "8": case "9": case "0":
+        // TODO
+        break;
+      case "Settings":
+      case "On":
+      case "Tip":
+      case "Arrest":
+      case "Clue":
+        // TODO
+        break;
+      default: throw new Error("not handled: " + buttonNames[i]);
+    }
+  });
+});
+
+function render() {
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const context = crimeScannerCanvas.getContext("2d");
+
+  context.drawImage(machineImage, 0, 0);
 }
 
 
