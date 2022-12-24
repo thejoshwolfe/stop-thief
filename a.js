@@ -351,14 +351,16 @@ window.addEventListener("keydown", function(event) {
   }
 });
 
-function render() {
-  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
-  const context = crimeScannerCanvas.getContext("2d");
-  context.drawImage(machineImage, 0, 0);
+function getDisplayText() {
+  let displayText = "";
 
-  let displayText = "8";
+  if (movementHistory.length === 0) return "";
+  const currentRoom = movementHistory[movementHistory.length - 1];
+  if (currentRoom === theSubway) return "";
 
-  const roomCode = "S"; // TODO
+  const buildingNumber = getExactSpaceNumber(currentRoom)[0];
+  const roomCode = gameBoardString[currentRoom];
+  displayText += buildingNumber;
   displayText += function() {
     switch (roomCode) {
       case "S": return "St";
@@ -366,9 +368,19 @@ function render() {
       case "C": return "Cr";
       case "W": return "Gl";
       case "D": return "dr";
+      default: throw new Error("not handled: " + roomCode);
     }
   }();
 
+  return displayText;
+}
+
+function render() {
+  const crimeScannerCanvas = document.getElementById("crimeScannerCanvas");
+  const context = crimeScannerCanvas.getContext("2d");
+  context.drawImage(machineImage, 0, 0);
+
+  const displayText = getDisplayText();
   for (let i = 0; i < displayText.length; i++) {
     renderSevenSegmentDisplay(i, displayText[i]);
   }
@@ -398,12 +410,15 @@ function render() {
 
         case "C": return [1,0,0,1,1,1,0];
         case "F": return [1,0,0,0,1,1,1];
-        case "G": return [0,0,1,1,1,1,0];
+        case "G": return [1,0,1,1,1,1,0];
         case "S": return [1,0,1,1,0,1,1];
         case "d": return [0,1,1,1,1,0,1];
         case "r": return [0,0,0,0,1,0,1];
         case "l": return [0,0,0,0,1,1,0];
         case "t": return [0,0,0,1,1,1,1];
+        case "_": return [0,0,0,1,0,0,0];
+
+        default: throw new Error("not handled: " + char);
       }
     }();
     context.fillStyle = "#f22";
@@ -803,6 +818,7 @@ arrestButton.addEventListener("click", function() {
       makeAMove(true);
       renderHistory();
       renderMap();
+      render();
     }
   }
 });
@@ -823,6 +839,7 @@ function doClue() {
     waitTimeHere++;
   }
   renderHistory();
+  render();
 }
 function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
