@@ -275,22 +275,80 @@ buttonBoundingBoxes.forEach(row => {
   button.textContent = name;
   // It goes in the background div.
   document.getElementById("crimeScannerBackgroundDiv").appendChild(button);
-  button.addEventListener("click", function() {
+  const handler = function() {
     switch (name) {
       case "1": case "2": case "3": case "4": case "5":
       case "6": case "7": case "8": case "9": case "0":
-        // TODO
-        break;
-      case "Settings":
-      case "On":
-      case "Tip":
-      case "Arrest":
-      case "Clue":
-        // TODO
-        break;
+        const number = parseInt(name);
+        return () => handleNumber(number);
+      case "Settings": return handleSettings;
+      case "On":       return handleNewGame;
+      case "Tip":      return handleTip;
+      case "Arrest":   return handleArrest;
+      case "Clue":     return handleClue;
       default: throw new Error("not handled: " + buttonNames[i]);
     }
-  });
+  }();
+  button.addEventListener("click", handler);
+});
+
+window.addEventListener("keydown", function(event) {
+  const SHIFT = 1 << 0;
+  const CTRL =  1 << 1;
+  const ALT =   1 << 2;
+  const META =  1 << 3;
+  const modifiers = (
+    event.shiftKey * SHIFT |
+    event.ctrlKey * CTRL |
+    event.altKey * ALT |
+    event.metaKey * META
+  );
+  switch (event.key) {
+      case "1": case "2": case "3": case "4": case "5":
+      case "6": case "7": case "8": case "9": case "0":
+        if (modifiers === 0) {
+          event.preventDefault();
+          const number = parseInt(event.key);
+          handleNumber(number);
+        }
+        break;
+    case " ":
+      if (modifiers === 0) {
+        event.preventDefault();
+        handleClue();
+      }
+      break;
+    case "Escape":
+      if (modifiers === 0) {
+        event.preventDefault();
+        handleSettings();
+      }
+      break;
+    case "Backspace":
+      if (modifiers === 0) {
+        event.preventDefault();
+        // TODO: backspace typed numbers.
+      }
+      break;
+    case "T": case "t":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleTip();
+      }
+      break;
+    case "A": case "a":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleArrest();
+      }
+      break;
+    case "N": case "n":
+      if (modifiers === SHIFT) {
+        event.preventDefault();
+        handleNewGame();
+      }
+      break;
+  }
 });
 
 function render() {
@@ -298,8 +356,36 @@ function render() {
   const context = crimeScannerCanvas.getContext("2d");
 
   context.drawImage(machineImage, 0, 0);
+
+  // TODO: LCD numbers
 }
 
+
+function handleSettings() {
+  const everythingElseDiv = document.getElementById("everythingElseDiv");
+  if (everythingElseDiv.style.display == "none") {
+    everythingElseDiv.style.display = "block";
+    everythingElseDiv.scrollIntoView({behavior:"smooth"});
+  } else {
+    everythingElseDiv.style.display = "none";
+  }
+}
+function handleNewGame() {
+  // TODO
+}
+function handleTip() {
+  // TODO
+}
+function handleArrest() {
+  // TODO
+}
+function handleClue() {
+  // TODO: check if game is running.
+  doClue();
+}
+function handleNumber(number) {
+  // TODO
+}
 
 
 const mapCanvas = document.getElementById("mapCanvas");
@@ -605,7 +691,9 @@ var movementHistory = [];
 var remainingLoot = [];
 var clueHistory = [];
 var waitTimeHere = 0;
-clueButton.addEventListener("click", function() {
+clueButton.addEventListener("click", handleClue);
+
+function doClue() {
   if (movementHistory.length === 0 || Math.random() < persistentState.probabilities.move) {
     makeAMove(true);
     renderMap();
@@ -614,7 +702,7 @@ clueButton.addEventListener("click", function() {
     waitTimeHere++;
   }
   renderHistory();
-});
+}
 function makeAMove(showBuildingNumber) {
   if (movementHistory.length === 0) {
     // start
