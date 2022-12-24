@@ -426,4 +426,43 @@ const sounds = {
 
     return duration;
   },
+
+  Comply() {
+    const duration = 3.85;
+    const sampleRate = audioCtx.sampleRate;
+    const bufferSize = sampleRate * duration;
+    const buffer = new AudioBuffer({length: bufferSize, sampleRate});
+
+    const noteFrequencies = [
+      440 * Math.pow(2, 0/12), // A
+      440 * Math.pow(2, -7/12), // D
+    ];
+    const noteTimes = [];
+
+    const noteDuration = duration / 8;
+    for (let i = 0; i < 16; i++) {
+      noteTimes.push(noteDuration * i);
+      if (noteFrequencies.length <= i) {
+        noteFrequencies.push(noteFrequencies[i % 2]);
+      }
+    }
+    noteTimes.push(999);
+
+    const data = buffer.getChannelData(0);
+    let noteCursor = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const t = i / sampleRate;
+      if (t >= noteTimes[noteCursor + 1]) {
+        noteCursor = noteCursor + 1;
+      }
+      const f = noteFrequencies[noteCursor];
+      data[i] = volume * Math.sign(Math.sin(t * twoPi * f));
+    }
+
+    let noiseNode = new AudioBufferSourceNode(audioCtx, {buffer});
+    noiseNode.connect(audioCtx.destination);
+    noiseNode.start();
+
+    return duration;
+  },
 };
