@@ -303,6 +303,14 @@ window.addEventListener("keydown", function(event) {
     event.altKey * ALT |
     event.metaKey * META
   );
+  const isTextboxInFocus =
+    document.activeElement != null &&
+    document.activeElement.tagName.toLowerCase() === "input" &&
+    document.activeElement.type === "text";
+  if (isTextboxInFocus) {
+    // don't interfere with textboxes.
+    return;
+  }
   switch (event.key) {
       case "1": case "2": case "3": case "4": case "5":
       case "6": case "7": case "8": case "9": case "0":
@@ -351,13 +359,104 @@ window.addEventListener("keydown", function(event) {
   }
 });
 
+function isGameInProgress() {
+  return persistentState.game.movementHistory.length > 0 && !persistentState.game.arrested;
+}
+
+let animationsInProgress = [];
+let animatedLcd = null;
+function isUiResponsive() {
+  return animationsInProgress.length === 0;
+}
+function animateLcd(lcd, timeFromNowInSeconds) {
+  const handle = setTimeout(function() {
+    animatedLcd = lcd;
+    render();
+    removeFromArray(animationsInProgress, handle);
+  }, timeFromNowInSeconds * 1000);
+  animationsInProgress.push(handle);
+}
+function completeAnimation(timeFromNowInSeconds) {
+  animateLcd(null, timeFromNowInSeconds);
+}
+
+function playAnimations(animations) {
+  const sequence = [];
+  for (let animation of animations) {
+    switch (animation) {
+      case "Arrest":
+        sequence.push([sounds.Arrest, " Ar"]);
+        continue;
+      case "Wrong":
+        sequence.push(1.1);
+        sequence.push([sounds.Wrong, " --", 1.0]);
+        continue;
+      case "Correct":
+        sequence.push([sounds.Correct, " Ar"]);
+        continue;
+      case "Comply":
+        sequence.push(1.4);
+        sequence.push([sounds.Comply, " CP"]);
+        continue;
+      case "Run":
+        sequence.push(1.4);
+        sequence.push([sounds.Run, " rn"]);
+        continue;
+      case "Wait":
+        sequence.push([sounds.Wait, null, 1.5]);
+        continue;
+    }
+    // It's a clue
+    if (animation.length !== 2) throw new Error("unexpected animation: " + animation);
+    if (sequence.length > 0) {
+      // part of a RUN
+      sequence.push(0.4);
+    }
+    sequence.push(function() {
+      switch (animation[1]) {
+        case "S": return [sounds.Street, animation[0] + "St"];
+        case "F": return [sounds.Floor,  animation[0] + "Fl"];
+        case "C": return [sounds.Crime,  animation[0] + "Cr"];
+        case "W": return [sounds.Glass,  animation[0] + "Gl"];
+        case "D": return [sounds.Door,   animation[0] + "dr"];
+        case "b": return [sounds.Subway, animation[0] + "Sb"];
+        default: throw new Error("not handled: " + animation);
+      }
+    }());
+  }
+  playSequence(sequence);
+}
+function playSequence(sequence) {
+  if (audioCtx == null) audioCtx = new AudioContext();
+  let t = 0;
+  for (let item of sequence) {
+    if (typeof item === "number") {
+      t += item;
+    } else {
+      const [sound, lcd, extraDelay] = item;
+      const buffer = sound();
+      let node = new AudioBufferSourceNode(audioCtx, {buffer});
+      node.connect(audioCtx.destination);
+      node.start(audioCtx.currentTime + t);
+
+      animateLcd(lcd, t);
+
+      t += buffer.length / audioCtx.sampleRate;
+      if (extraDelay != null) {
+        t += extraDelay;
+      }
+    }
+  }
+  completeAnimation(t);
+}
+
 function getDisplayText() {
+  if (animatedLcd != null) return animatedLcd;
   let displayText = "";
 
   const {clueHistory} = persistentState.game;
   const clue = clueHistory[clueHistory.length - 1];
   if (clue == null) return "";
-  if (clue === " b") return " Sb";
 
   displayText += clue[0];
   displayText += function() {
@@ -367,6 +466,7 @@ function getDisplayText() {
       case "C": return "Cr";
       case "W": return "Gl";
       case "D": return "dr";
+      case "b": return "Sb";
       default: throw new Error("not handled: " + roomCode);
     }
   }();
@@ -407,17 +507,21 @@ function render() {
         case "8": return [1,1,1,1,1,1,1];
         case "9": return [1,1,1,0,0,1,1];
 
+        case "A": return [1,1,1,0,1,1,1];
         case "C": return [1,0,0,1,1,1,0];
         case "F": return [1,0,0,0,1,1,1];
         case "G": return [1,0,1,1,1,1,0];
+        case "P": return [1,1,0,0,1,1,1];
         case "S": return [1,0,1,1,0,1,1];
         case "b": return [0,0,1,1,1,1,1];
         case "d": return [0,1,1,1,1,0,1];
+        case "n": return [0,0,1,0,1,0,1];
         case "r": return [0,0,0,0,1,0,1];
         case "l": return [0,0,0,0,1,1,0];
         case "t": return [0,0,0,1,1,1,1];
 
         case " ": return [0,0,0,0,0,0,0];
+        case "-": return [0,0,0,0,0,0,1];
         case "_": return [0,0,0,1,0,0,0];
 
         default: throw new Error("not handled: " + char);
@@ -509,29 +613,34 @@ function handleSettings() {
   }
 }
 function handleNewGame() {
-  // TODO: sometimes confirm.
+  if (!isUiResponsive()) return;
+  if (isGameInProgress()) {
+    if (!confirm("Start new game?")) return;
+  }
+
   persistentState.game = {
     movementHistory: [],
     remainingLoot: [],
     waitTimeHere: 0,
     clueHistory: [],
+    arrested: false,
   };
-  makeAMove(true);
+  playAnimations([makeAMove(true)]);
   saveState();
   renderMap();
   renderHistory();
   render();
 }
 function handleTip() {
-  // TODO: check if game is running.
+  if (!(isUiResponsive() && isGameInProgress())) return;
   doTip();
 }
 function handleArrest() {
-  // TODO: check if game is running.
+  if (!(isUiResponsive() && isGameInProgress())) return;
   doArrest();
 }
 function handleClue() {
-  // TODO: check if game is running.
+  if (!(isUiResponsive() && isGameInProgress())) return;
   doClue();
 }
 function handleNumber(number) {
@@ -543,13 +652,13 @@ const mapCanvas = document.getElementById("mapCanvas");
 const currentMoveDiv = document.getElementById("currentMoveDiv");
 const historyUl = document.getElementById("historyUl");
 
-// TODO: move all this to persistentState.
 var persistentState = {
   game: {
     movementHistory: [],
     remainingLoot: [],
     waitTimeHere: 0,
     clueHistory: [],
+    arrested: false,
   },
   probabilities: {
     move: 0.75,
@@ -800,11 +909,10 @@ function doTip() {
   let currentRoom = getCurrentRoom();
   if (currentRoom == null || currentRoom === theSubway) return;
   let exactSpaceNumber = getExactSpaceNumber(currentRoom);
-  // TODO: use LCD display instead
-  let formattedSpace = exactSpaceNumber[0] + "-" + exactSpaceNumber[1] + exactSpaceNumber[2];
-  if (confirm("--> The tip will appear right here <--")) {
-    alert(formattedSpace);
-  }
+  const lcd = exactSpaceNumber.join("");
+  playSequence([
+    [sounds.Tip, lcd, 5],
+  ]);
 }
 
 function doArrest() {
@@ -821,24 +929,29 @@ function doArrest() {
     alert("incorrect formatting");
     return;
   }
+  const animations = ["Arrest"];
   // TODO: sounds and stuff
   if (guess !== exactSpaceNumber.join("")) {
-    alert("wrong");
+    animations.push("Wrong");
   } else {
+    animations.push("Correct");
     if (Math.random() < persistentState.probabilities.comply) {
-      alert("Successful arrest! (TODO: reset the game state.)");
+      animations.push("Comply");
+      persistentState.game.arrested = true;
+      saveState();
     } else {
-      alert("Thief is running!");
+      animations.push("Run");
       let runFarther = Math.random() < persistentState.probabilities.runFarther;
       for (let i = 0; i < 5 + runFarther - 1; i++) {
-        makeAMove(false);
+        animations.push(makeAMove(false));
       }
-      makeAMove(true);
+      animations.push(makeAMove(true));
       renderHistory();
       renderMap();
       render();
     }
   }
+  playAnimations(animations);
 }
 
 function getCurrentRoom() {
@@ -849,17 +962,19 @@ function getCurrentRoom() {
 
 function doClue() {
   if (Math.random() < persistentState.probabilities.move) {
-    makeAMove(true);
+    playAnimations([makeAMove(true)]);
     renderMap();
   } else {
     // Wait
     persistentState.game.waitTimeHere++;
+    playAnimations(["Wait"]);
   }
   renderHistory();
   render();
 }
 function makeAMove(showBuildingNumber) {
   const {movementHistory, remainingLoot, clueHistory} = persistentState.game;
+  let clue;
   if (movementHistory.length === 0) {
     // start
     let startingRoomOptions = [];
@@ -870,7 +985,8 @@ function makeAMove(showBuildingNumber) {
     }
     let startingRoom = randomArrayItem(startingRoomOptions);
     movementHistory.push(startingRoom);
-    clueHistory.push(renderClue(startingRoom, showBuildingNumber));
+    clue = renderClue(startingRoom, showBuildingNumber);
+    clueHistory.push(clue);
     removeFromArray(remainingLoot, startingRoom);
   } else {
     // move
@@ -914,7 +1030,8 @@ function makeAMove(showBuildingNumber) {
       room = randomArrayItem(possibleMoves);
     }
     movementHistory.push(room);
-    clueHistory.push(renderClue(room, showBuildingNumber));
+    clue = renderClue(room, showBuildingNumber);
+    clueHistory.push(clue);
     if (remainingLoot.indexOf(room) !== -1) {
       removeFromArray(remainingLoot, room);
     }
@@ -933,6 +1050,8 @@ function makeAMove(showBuildingNumber) {
   }
   persistentState.game.waitTimeHere = 0;
   saveState();
+
+  return clue;
 }
 
 function renderClue(room, showBuildingNumber) {

@@ -5,48 +5,51 @@ const majorSecond = Math.pow(2, 2/12);
 const volume = 0.1;
 
 const singlesDiv = document.getElementById("singlesDiv");
-[
-  "Crime", "Floor", "Glass", "Door", "Street", "Subway",
-  "Wait", // Also mundane button presses.
-  "Tip",
-  "Arrest", "Wrong", "Correct", "Comply", "Run",
-].forEach(name => {
-  let button = document.createElement("input");
-  button.type = "button";
-  button.value = name;
-  singlesDiv.appendChild(button);
+if (singlesDiv != null) {
+  // This is the UI for the sound test page.
+  [
+    "Crime", "Floor", "Glass", "Door", "Street", "Subway",
+    "Wait", // Also mundane button presses.
+    "Tip",
+    "Arrest", "Wrong", "Correct", "Comply", "Run",
+  ].forEach(name => {
+    let button = document.createElement("input");
+    button.type = "button";
+    button.value = name;
+    singlesDiv.appendChild(button);
 
-  button.addEventListener("click", function() {
-    playSounds([sounds[name]]);
+    button.addEventListener("click", function() {
+      playSounds([sounds[name]]);
+    });
   });
-});
 
-document.getElementById("subwayStreetButton").addEventListener("click", function() {
-  playSounds([sounds.Subway, 0.2, sounds.Street]);
-});
-document.getElementById("arrestWrongButton").addEventListener("click", function() {
-  playSounds([sounds.Arrest, 1.1, sounds.Wrong]);
-});
-document.getElementById("arrestCorrectComplyButton").addEventListener("click", function() {
-  playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Comply]);
-});
-document.getElementById("arrestCorrectRunButton").addEventListener("click", function() {
-  playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Run]);
-});
-document.getElementById("arrestCorrectRunRandomButton").addEventListener("click", function() {
-  const sequence = [sounds.Arrest, sounds.Correct, 1.4, sounds.Run];
-  for (let i = 5 + Math.floor(2 * Math.random()); i > 0; i--) {
-    sequence.push(0.4);
-    sequence.push([
-      sounds.Crime,
-      sounds.Floor,
-      sounds.Glass,
-      sounds.Door,
-      sounds.Street,
-    ][Math.floor(5 * Math.random())]);
-  }
-  playSounds(sequence);
-});
+  document.getElementById("subwayStreetButton").addEventListener("click", function() {
+    playSounds([sounds.Subway, 0.2, sounds.Street]);
+  });
+  document.getElementById("arrestWrongButton").addEventListener("click", function() {
+    playSounds([sounds.Arrest, 1.1, sounds.Wrong]);
+  });
+  document.getElementById("arrestCorrectComplyButton").addEventListener("click", function() {
+    playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Comply]);
+  });
+  document.getElementById("arrestCorrectRunButton").addEventListener("click", function() {
+    playSounds([sounds.Arrest, sounds.Correct, 1.4, sounds.Run]);
+  });
+  document.getElementById("arrestCorrectRunRandomButton").addEventListener("click", function() {
+    const sequence = [sounds.Arrest, sounds.Correct, 1.4, sounds.Run];
+    for (let i = 5 + Math.floor(2 * Math.random()); i > 0; i--) {
+      sequence.push(0.4);
+      sequence.push([
+        sounds.Crime,
+        sounds.Floor,
+        sounds.Glass,
+        sounds.Door,
+        sounds.Street,
+      ][Math.floor(5 * Math.random())]);
+    }
+    playSounds(sequence);
+  });
+}
 
 function playSounds(sequence) {
   if (audioCtx == null) audioCtx = new AudioContext();
@@ -62,7 +65,6 @@ function playSounds(sequence) {
       t += item;
     } else throw new Error("not sure what this is: " + item);
   }
-  return t;
 }
 
 const sounds = {
