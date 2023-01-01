@@ -286,7 +286,7 @@ buttonBoundingBoxes.forEach(row => {
       case "Tip":      return handleTip;
       case "Arrest":   return handleArrest;
       case "Clue":     return handleClue;
-      default: throw new Error("not handled: " + buttonNames[i]);
+      default: throw new Error("not handled: " + name);
     }
   }();
   button.addEventListener("click", handler);
@@ -433,9 +433,9 @@ function playAnimations(animations) {
         continue;
     }
     // It's a clue
-    if (animation.length !== 2) throw new Error("unexpected animation: " + animation);
+    if (animation.length !== 3) throw new Error("unexpected animation: " + animation);
     if (sequence.length > 0) {
-      if (animation[1] === "S" && i > 0 && animations[i - 1] === " b") {
+      if (animation.substr(1) === "St" && i > 0 && animations[i - 1] === " Sb") {
         // Exiting the subway.
         sequence.push(0.2);
       } else {
@@ -443,17 +443,17 @@ function playAnimations(animations) {
         sequence.push(0.4);
       }
     }
-    sequence.push(function() {
-      switch (animation[1]) {
-        case "S": return [sounds.Street, animation[0] + "St"];
-        case "F": return [sounds.Floor,  animation[0] + "Fl"];
-        case "C": return [sounds.Crime,  animation[0] + "Cr"];
-        case "W": return [sounds.Glass,  animation[0] + "Gl"];
-        case "D": return [sounds.Door,   animation[0] + "dr"];
-        case "b": return [sounds.Subway, animation[0] + "Sb"];
+    sequence.push([function() {
+      switch (animation.substr(1)) {
+        case "St": return sounds.Street;
+        case "Fl": return sounds.Floor;
+        case "Cr": return sounds.Crime;
+        case "Gl": return sounds.Glass;
+        case "dr": return sounds.Door;
+        case "Sb": return sounds.Subway;
         default: throw new Error("not handled: " + animation);
       }
-    }());
+    }(), animation]);
   }
   playSequence(sequence);
 }
@@ -501,22 +501,7 @@ function getDisplayText() {
   const {clueHistory} = persistentState.game;
   const clue = clueHistory[clueHistory.length - 1];
   if (clue == null) return "";
-
-  let displayText = "";
-  displayText += clue[0];
-  displayText += function() {
-    switch (clue[1]) {
-      case "S": return "St";
-      case "F": return "Fl";
-      case "C": return "Cr";
-      case "W": return "Gl";
-      case "D": return "dr";
-      case "b": return "Sb";
-      default: throw new Error("not handled: " + roomCode);
-    }
-  }();
-
-  return displayText;
+  return clue;
 }
 
 function render() {
@@ -672,7 +657,7 @@ function handleNewGame() {
     clueHistory: [],
     arrested: false,
   };
-  playAnimations(makeAMove(true));
+  playAnimations(makeAMove());
   saveState();
   renderMap();
   renderHistory();
@@ -744,7 +729,14 @@ var persistentState = {
   },
 };
 (function loadState() {
-  persistentState = recurse(persistentState, JSON.parse(localStorage["stop-thief"] || "null"));
+  try {
+    persistentState = recurse(persistentState, JSON.parse(localStorage["stop-thief"] || "null"));
+    upgradeClueHistory(persistentState.game.clueHistory);
+  } catch (e) {
+    // If anything goes wrong during loading, we reset everything.
+    delete localStorage["stop-thief"];
+    window.location.reload();
+  }
   function recurse(state, loadedData) {
     if (typeof state !== typeof loadedData) return state;
     if ((state == null) !== (loadedData == null)) return state;
@@ -763,6 +755,25 @@ var persistentState = {
         return loadedData;
     }
     throw new Error();
+  }
+  function upgradeClueHistory(clueHistory) {
+    // Upgrade from the 2-character clue history format from version 1.0 to the 3-character clue history format of 1.1:
+    //  "2F" => "2Fl"
+    //  " b" => " Sb"
+    for (let i = 0; i < clueHistory.length; i++) {
+      clueHistory[i] = function(clue) {
+        if (clue.length === 3) return clue;
+        switch (clue[1]) {
+          case "S": return clue[0] + "St";
+          case "F": return clue[0] + "Fl";
+          case "C": return clue[0] + "Cr";
+          case "W": return clue[0] + "Gl";
+          case "D": return clue[0] + "dr";
+          case "b": return clue[0] + "Sb";
+          default: throw new Error("not handled: " + clue);
+        }
+      }(clueHistory[i])
+    }
   }
 })();
 function saveState() {
@@ -1019,9 +1030,9 @@ function doArrest(guess) {
       animations.push("Run");
       let runFarther = Math.random() < persistentState.probabilities.runFarther;
       for (let i = 0; i < 5 + runFarther - 1; i++) {
-        animations.push(...makeAMove(false));
+        animations.push(...makeAMove());
       }
-      animations.push(...makeAMove(true));
+      animations.push(...makeAMove());
       renderHistory();
       renderMap();
       render();
@@ -1038,7 +1049,7 @@ function getCurrentRoom() {
 
 function doClue() {
   if (Math.random() < persistentState.probabilities.move) {
-    playAnimations(makeAMove(true));
+    playAnimations(makeAMove());
     renderMap();
   } else {
     // Wait
@@ -1048,15 +1059,15 @@ function doClue() {
   renderHistory();
   render();
 }
-function makeAMove(showBuildingNumber) {
+function makeAMove() {
   const clues = [];
-  clues.push(makeASingleMove(showBuildingNumber));
+  clues.push(makeASingleMove());
   if (getCurrentRoom() == theSubway) {
-    clues.push(makeASingleMove(showBuildingNumber));
+    clues.push(makeASingleMove());
   }
   return clues;
 }
-function makeASingleMove(showBuildingNumber) {
+function makeASingleMove() {
   const {movementHistory, remainingLoot, clueHistory} = persistentState.game;
   let clue;
   if (movementHistory.length === 0) {
@@ -1069,7 +1080,7 @@ function makeASingleMove(showBuildingNumber) {
     }
     let startingRoom = randomArrayItem(startingRoomOptions);
     movementHistory.push(startingRoom);
-    clue = renderClue(startingRoom, showBuildingNumber);
+    clue = renderClue(startingRoom);
     clueHistory.push(clue);
     removeFromArray(remainingLoot, startingRoom);
   } else {
@@ -1114,7 +1125,7 @@ function makeASingleMove(showBuildingNumber) {
       room = randomArrayItem(possibleMoves);
     }
     movementHistory.push(room);
-    clue = renderClue(room, showBuildingNumber);
+    clue = renderClue(room);
     clueHistory.push(clue);
     if (remainingLoot.indexOf(room) !== -1) {
       removeFromArray(remainingLoot, room);
@@ -1138,8 +1149,8 @@ function makeASingleMove(showBuildingNumber) {
   return clue;
 }
 
-function renderClue(room, showBuildingNumber) {
-  if (room === theSubway) return " b";
+function renderClue(room) {
+  if (room === theSubway) return " Sb";
   let typeCode = gameBoardString[room];
   if (typeCode === "C" && persistentState.game.remainingLoot.indexOf(room) === -1) {
     // this space has been robbed.
@@ -1149,21 +1160,26 @@ function renderClue(room, showBuildingNumber) {
       typeCode = "F";
     }
   }
-  if (showBuildingNumber) {
-    return getBuildingNumber(room) + typeCode;
-  } else {
-    return " " + typeCode;
-  }
+  return getBuildingNumber(room) + function() {
+    switch (typeCode) {
+      case "S": return "St";
+      case "F": return "Fl";
+      case "C": return "Cr";
+      case "W": return "Gl";
+      case "D": return "dr";
+      default: throw new Error("not handled: " + typeCode);
+    }
+  }();
 }
 function clueToVerboseDescription(clue) {
-  if (clue === " b") return "The Subway";
   var result = (function() {
-    switch (clue[1]) {
-      case "S": return "Street";
-      case "F": return "Floor";
-      case "C": return "Crime";
-      case "W": return "Window";
-      case "D": return "Door";
+    switch (clue.substr(1)) {
+      case "St": return "Street";
+      case "Fl": return "Floor";
+      case "Cr": return "Crime";
+      case "Gl": return "Window";
+      case "dr": return "Door";
+      case "Sb": return "The Subway";
       default: throw new Error();
     }
   })();
