@@ -16,7 +16,25 @@ Better feature parity with the original device:
 
 * Press number buttons to replay recent history.
 * Building/street numbers no longer hidden during RUN.
-* (Sound test mode???)
+* Sound test mode. Press number buttons while game is not in progress (before pressing ON). The numbers play these sounds:
+    1. `-Cr` Crime
+    2. `-Fl` Floor
+    3. `-dr` Door
+    4. `-Gl` Window
+    5. `-St` Street
+    6. `-Sb` Subway
+    7. `PL`, `--` Arrest (Wrong)
+    8. `PL`, `Ar` Arrest (Comply)
+    9. `PL`, `rn` Arrest (Run)
+
+Changed features from the device:
+
+* Pressing ON while the game is running prompts to abandon current game, and then turns off the current game (like the old OFF button). This can be useful to get back to sound test mode. (Previously in 1.0, the ON button during a game would start a new game without stopping in the intermediate no-game state.)
+* (Difficult to verify) The number buttons replaying the clue history for a subway ride will include *only* the subway ride itself, not the street clue after exiting the subway; the street clue is the next numbered clue instead. This means that subway+street is a time (the only time) when two clues are added to the history for a single press of the CLUE button. (The subway ride does not count against the 5 or 6 times the thief does a MOVE after a RUN from a CORRECT ARREST.) A future improvement would probably be to effectively glue together the subway ride and the following street clue in the clue history and replay both with a single number press.
+
+Minor updates:
+
+* The default UI state is to hide all UI elements. I don't think people need to be shown the movement rules and probabilities by default. With the addition of the number keys for clue history, there is less need for a clue history in the settings panel, so that's hidden by default too. With the addition of a sound test mode, there is less need for verbose English descriptions of the LCD-and-sound clues.
 
 # Version History
 

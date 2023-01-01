@@ -8,7 +8,7 @@ const singlesDiv = document.getElementById("singlesDiv");
 if (singlesDiv != null) {
   // This is the UI for the sound test page.
   [
-    "Crime", "Floor", "Glass", "Door", "Street", "Subway",
+    "Crime", "Floor", "Door", "Glass", "Street", "Subway",
     "Wait", // Also mundane button presses.
     "Tip",
     "Arrest", "Wrong", "Correct", "Comply", "Run",

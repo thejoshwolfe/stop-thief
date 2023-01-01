@@ -646,8 +646,9 @@ function handleSettings() {
 function handleNewGame() {
   if (!isUiResponsive()) return;
   if (isInputPromptInProgress()) return;
-  if (isGameInProgress()) {
-    if (!confirm("Start new game?")) return;
+  const isMidGame = isGameInProgress();
+  if (isMidGame) {
+    if (!confirm("Abandon current game?")) return;
   }
 
   persistentState.game = {
@@ -657,7 +658,11 @@ function handleNewGame() {
     clueHistory: [],
     arrested: false,
   };
-  playAnimations(makeAMove());
+
+  if (!isMidGame) {
+    // Start a game.
+    playAnimations(makeAMove());
+  }
   saveState();
   renderMap();
   renderHistory();
@@ -698,12 +703,29 @@ function handleNumber(number) {
         [sounds.Wait],
       ]);
     }
-  } else if (isGameInProgress() && isUiResponsive()) {
-    // Replay clue history.
-    const {clueHistory} = persistentState.game;
-    const clue = clueHistory[clueHistory.length - 1 - number];
-    if (clue == null) return;
-    playAnimations([clue]);
+  } else {
+    if (!isUiResponsive()) return;
+    if (isGameInProgress()) {
+      // Replay clue history.
+      const {clueHistory} = persistentState.game;
+      const clue = clueHistory[clueHistory.length - 1 - number];
+      if (clue == null) return;
+      playAnimations([clue]);
+    } else {
+      // Sound test mode.
+      switch (number) {
+        case 1: return playAnimations(["-Cr"]);
+        case 2: return playAnimations(["-Fl"]);
+        case 3: return playAnimations(["-dr"]);
+        case 4: return playAnimations(["-Gl"]);
+        case 5: return playAnimations(["-St"]);
+        case 6: return playAnimations(["-Sb"]);
+        case 7: return playAnimations(["Arrest", "Wrong"]);
+        case 8: return playAnimations(["Arrest", "Correct", "Comply"]);
+        case 9: return playAnimations(["Arrest", "Correct", "Run"]);
+        case 0: return;
+      }
+    }
   }
 }
 
@@ -729,9 +751,9 @@ var persistentState = {
     showMap: false,
     showMovementGraph: false,
     showThiefMovement: false,
-    showClueHistory: true,
-    showMovementRules: true,
-    showProbabilities: true,
+    showClueHistory: false,
+    showMovementRules: false,
+    showProbabilities: false,
     showSoundTest: false,
     playSound: true,
   },
