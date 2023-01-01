@@ -8,7 +8,7 @@ http://wolfesoftware.com/stop-thief/
 
 ![screenshot](https://user-images.githubusercontent.com/87436/209446532-e92e00e8-7ca4-4a80-af9b-c5ae896d1030.png)
 
-# Roadmap
+# Version History
 
 ## 1.1
 
@@ -35,8 +35,6 @@ Changed features from the device:
 Minor updates:
 
 * The default UI state is to hide all UI elements. I don't think people need to be shown the movement rules and probabilities by default. With the addition of the number keys for clue history, there is less need for a clue history in the settings panel, so that's hidden by default too. With the addition of a sound test mode, there is less need for verbose English descriptions of the LCD-and-sound clues.
-
-# Version History
 
 ## 1.0
 
