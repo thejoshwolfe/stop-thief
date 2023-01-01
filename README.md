@@ -8,12 +8,21 @@ http://wolfesoftware.com/stop-thief/
 
 ![screenshot](https://user-images.githubusercontent.com/87436/209446532-e92e00e8-7ca4-4a80-af9b-c5ae896d1030.png)
 
+# Roadmap
+
+## 1.1
+
+Better feature parity with the original device:
+
+* Press number buttons to replay recent history.
+* Building/street numbers no longer hidden during RUN.
+* (Sound test mode???)
 
 # Version History
 
 ## 1.0
 
-Feature parity with the original device as far as I can tell.
+Almost feature parity with the original device.
 I'm not totally certain about the AI movement rules, because I don't have a working device to test with.
 The random probabilities are all configured in the user interface in the settings.
 
@@ -33,6 +42,12 @@ Changed features relative to the original device:
 
 * OFF button replaced by Settings button.
 * ON button starts a new game, with confirmation prompt when you're mid-game.
+* Building/street numbers are hidding during a RUN. This was an intentional albeit misguided attempt to be faithful to the original device based on a misunderstanding. (Fixed in version 1.1.)
+
+Features missing relative to the original device:
+
+* Press number buttons to replay recent clue history. (Added in version 1.1.)
+* Sound test mode.
 
 # License
 

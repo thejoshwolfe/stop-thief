@@ -685,17 +685,25 @@ function handleClue() {
   doClue();
 }
 function handleNumber(number) {
-  if (!isInputPromptInProgress()) return;
-  partialInputPrompt += number;
-  if (partialInputPrompt.length === 3) {
-    const guess = partialInputPrompt;
-    partialInputPrompt = null;
-    doArrest(guess);
-  } else {
-    // Button press sound.
-    playSequence([
-      [sounds.Wait],
-    ]);
+  if (isInputPromptInProgress()) {
+    // Arrest prompt.
+    partialInputPrompt += number;
+    if (partialInputPrompt.length === 3) {
+      const guess = partialInputPrompt;
+      partialInputPrompt = null;
+      doArrest(guess);
+    } else {
+      // Button press sound.
+      playSequence([
+        [sounds.Wait],
+      ]);
+    }
+  } else if (isGameInProgress() && isUiResponsive()) {
+    // Replay clue history.
+    const {clueHistory} = persistentState.game;
+    const clue = clueHistory[clueHistory.length - 1 - number];
+    if (clue == null) return;
+    playAnimations([clue]);
   }
 }
 
