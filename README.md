@@ -10,6 +10,10 @@ http://wolfesoftware.com/stop-thief/
 
 # Version History
 
+## 1.2
+
+* Added an option to force the thief to move to a new space after riding the SUBWAY.
+
 ## 1.1
 
 Better feature parity with the original device:
