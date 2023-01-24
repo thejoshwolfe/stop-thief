@@ -35,25 +35,26 @@
     <div id="theMovementRulesDiv">
       Thief movement rules (in this order):
       <ol>
-        <li>For each CLUE, the thief will either MOVE or WAIT. (See Probabilities.)</li>
-        <li>For each MOVE, the thief will always use the SUBWAY if the thief is on one of the 5 STREET spaces with SUBWAY access, unless the thief has just used the SUBWAY 1 MOVE ago. After using the SUBWAY, the thief immediately moves into 1 of the 5 STREET spaces with SUBWAY access (Note: this can be the same STREET space where the thief was before using the SUBWAY.) The next MOVE never uses the SUBWAY (otherwise, the thief would never get away from the subway.).</li>
+        <li>For each CLUE, the thief will either MOVE or WAIT. (See Thief Behavior.)</li>
+        <li>For each MOVE, the thief will always use the SUBWAY if the thief is on one of the 5 STREET spaces with SUBWAY access, unless the thief has just used the SUBWAY 1 MOVE ago. After using the SUBWAY, the thief immediately moves into 1 of the 5 STREET spaces with SUBWAY access (Note: this can be the same STREET space where the thief was before using the SUBWAY, unless this is disabled in the Thief Behavior settings.) The next MOVE never uses the SUBWAY (otherwise, the thief would never get away from the subway.).</li>
         <li>For each MOVE, if the thief has just moved onto a DOOR or WINDOW, the thief will continue through to the other side.</li>
         <li>For each MOVE, the thief can move up to 2 board spaces in any direction (including diagonally) to land on a numbered space. If the thief steps onto the street during a MOVE, the thief will stop on a street space; in other words, the thief cannot leap across the street into the door or window of another building in a single MOVE. This establishes the set of available spaces.</li>
         <li>For each MOVE, if there are 1 or more available unused indoor CRIME spaces, the thief will choose randomly from among them and move to it. A used indoor CRIME space is considered a FLOOR space until it is restocked, and a used outdoor CRIME space (the NEWS STAND) is considered a STREET space until it is restocked. Indoor CRIME spaces are restocked when the thief leaves the building; the NEWS STAND is restocked after the thief COMPLIES with a CORRECT ARREST.</li>
         <li>For each MOVE, the thief will never move into a numbered space where the thief was last turn, a direct U-turn. (But the thief can move into a space where the thief was 2 turns ago, making a triangle.) (Remember that a CRIME space turns into a FLOOR or STREET space until the CRIME space is restocked.)</li>
         <li>For each MOVE, if none of the above rules have determined the thief's movement space, the thief will choose one of the available spaces randomly.</li>
         <li>After an INCORRECT ARREST, the thief will do nothing.</li>
-        <li>After a CORRECT ARREST, the thief will either COMPLY or RUN. (See Probabilities.)</li>
-        <li>For each RUN, the thief will MOVE 5 or 6 times. (See Probabilities.)</li>
+        <li>After a CORRECT ARREST, the thief will either COMPLY or RUN. (See Thief Behavior.)</li>
+        <li>For each RUN, the thief will MOVE 5 or 6 times. (See Thief Behavior.)</li>
       </ol>
     </div>
-    <input id="showProbabilitiesButton" type="button" value="Hide Probabilities">
-    <div id="theProbabilitiesDiv">
-      Probabilities:
+    <input id="showThiefBehaviorButton" type="button" value="Hide Thief Behavior">
+    <div id="theThiefBehaviorDiv">
+      Thief Behavior:
       <ul>
         <li><label>Chance to MOVE on each CLUE: <input id="moveChanceTextbox" value="???"></label></li>
         <li><label>Chance to COMPLY on each CORRECT ARREST: <input id="complyChanceTextbox" value="???"></label></li>
         <li><label>Chance to MOVE an extra time on each RUN: <input id="runFartherChanceTextbox" value="???"></label></li>
+        <li><label><input id="sameSubwayCheckbox" type="checkbox">Possible to emerge on the same space after using the SUBWAY.</label></li>
       </ul>
     </div>
     <input id="showSoundTestButton" type="button" value="Hide Sound Test">

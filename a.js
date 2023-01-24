@@ -742,10 +742,11 @@ var persistentState = {
     clueHistory: [],
     arrested: false,
   },
-  probabilities: {
+  thiefBehavior: {
     move: 0.75,
     comply: 0.5,
     runFarther: 0.5,
+    sameSubway: true,
   },
   ui: {
     showMap: false,
@@ -753,7 +754,7 @@ var persistentState = {
     showThiefMovement: false,
     showClueHistory: false,
     showMovementRules: false,
-    showProbabilities: false,
+    showThiefBehavior: false,
     showSoundTest: false,
     playSound: true,
   },
@@ -776,7 +777,12 @@ var persistentState = {
         return loadedData;
       case typeof state === "object":
         for (let k in state) {
-          state[k] = recurse(state[k], loadedData[k]);
+          if (k === "thiefBehavior" && "probabilities" in loadedData) {
+            // Migrate 1.1 to 1.2.
+            state.thiefBehavior = recurse(state.thiefBehavior, loadedData.probabilities);
+          } else {
+            state[k] = recurse(state[k], loadedData[k]);
+          }
         }
         return state;
       case typeof state === "boolean":
@@ -822,7 +828,7 @@ function saveState() {
 });
 
 // Show/hide UI sections.
-["Map", "ClueHistory", "MovementRules", "Probabilities", "SoundTest"].forEach(name => {
+["Map", "ClueHistory", "MovementRules", "ThiefBehavior", "SoundTest"].forEach(name => {
   const button = document.getElementById("show" + name + "Button");
   const div = document.getElementById("the" + name + "Div");
   const propertyName = "show" + name;
@@ -852,22 +858,31 @@ function maybeShowElement(element, showIt) {
   element.style.display = showIt ? "block" : "none";
 }
 
-// Probabilities
+// Thief Behavior
 ["move", "comply", "runFarther"].forEach(propertyName => {
   let textbox = document.getElementById(propertyName + "ChanceTextbox");
   textbox.addEventListener("change", function() {
     let value = parseFloat(textbox.value);
     if (isNaN(value)) {
-      value = persistentState.probabilities[propertyName];
+      value = persistentState.thiefBehavior[propertyName];
     }
     if (value < 0) value = 0;
     if (value > 1) value = 1;
-    persistentState.probabilities[propertyName] = value;
+    persistentState.thiefBehavior[propertyName] = value;
     saveState();
     textbox.value = value;
   });
-  textbox.value = persistentState.probabilities[propertyName];
-})
+  textbox.value = persistentState.thiefBehavior[propertyName];
+});
+["sameSubway"].forEach(propertyName => {
+  let checkbox = document.getElementById(propertyName + "Checkbox");
+  checkbox.checked = persistentState.thiefBehavior[propertyName];
+  checkbox.addEventListener("change", function() {
+    persistentState.thiefBehavior[propertyName] = checkbox.checked;
+    saveState();
+    renderMap();
+  });
+});
 
 const gameBoardString = "" +
 "                               s      " + // 0
@@ -1052,13 +1067,13 @@ function doArrest(guess) {
     animations.push("Wrong");
   } else {
     animations.push("Correct");
-    if (Math.random() < persistentState.probabilities.comply) {
+    if (Math.random() < persistentState.thiefBehavior.comply) {
       animations.push("Comply");
       persistentState.game.arrested = true;
       saveState();
     } else {
       animations.push("Run");
-      let runFarther = Math.random() < persistentState.probabilities.runFarther;
+      let runFarther = Math.random() < persistentState.thiefBehavior.runFarther;
       for (let i = 0; i < 5 + runFarther - 1; i++) {
         animations.push(...makeAMove());
       }
@@ -1078,7 +1093,7 @@ function getCurrentRoom() {
 }
 
 function doClue() {
-  if (Math.random() < persistentState.probabilities.move) {
+  if (Math.random() < persistentState.thiefBehavior.move) {
     playAnimations(makeAMove());
     renderMap();
   } else {
@@ -1136,7 +1151,14 @@ function makeASingleMove() {
     let possibleMoves = [];
     let irresistibleCrimes = [];
     for (let room of thiefRoomToAdjacentThiefRooms[currentRoom]) {
-      if (room === previousRoom && currentRoom !== theSubway) continue; // no U-turns, except out of the subway.
+      if (room === previousRoom) {
+        // No U-turns.
+        if (currentRoom === theSubway && persistentState.thiefBehavior.sameSubway) {
+          // Actually, U-turns are allowed out of the subway.
+        } else {
+          continue;
+        }
+      }
       if (!doorwayAllows(room)) continue;
       possibleMoves.push(room);
       if (gameBoardString[room] === "C" && remainingLoot.indexOf(room) !== -1 && room !== newsStand) {
