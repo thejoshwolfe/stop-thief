@@ -10,6 +10,10 @@ http://wolfesoftware.com/stop-thief/
 
 # Version History
 
+## 1.3
+
+* Added a house rule option to make the thief get tired after running too much.
+
 ## 1.2
 
 * Added an option to force the thief to move to a new space after riding the SUBWAY.

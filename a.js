@@ -657,6 +657,7 @@ function handleNewGame() {
     waitTimeHere: 0,
     clueHistory: [],
     arrested: false,
+    runCount: 0,
   };
 
   if (!isMidGame) {
@@ -666,6 +667,7 @@ function handleNewGame() {
   saveState();
   renderMap();
   renderHistory();
+  renderThiefGetsTiredUi();
   render();
 }
 function handleTip() {
@@ -741,12 +743,16 @@ var persistentState = {
     waitTimeHere: 0,
     clueHistory: [],
     arrested: false,
+    runCount: 0,
   },
   thiefBehavior: {
     move: 0.75,
     comply: 0.5,
     runFarther: 0.5,
     sameSubway: true,
+    getsTired: false,
+    maxRuns: 2,
+    probabilityIncreases: true,
   },
   ui: {
     showMap: false,
@@ -871,6 +877,7 @@ function maybeShowElement(element, showIt) {
     persistentState.thiefBehavior[propertyName] = value;
     saveState();
     textbox.value = value;
+    renderThiefGetsTiredUi();
   });
   textbox.value = persistentState.thiefBehavior[propertyName];
 });
@@ -883,6 +890,28 @@ function maybeShowElement(element, showIt) {
     renderMap();
   });
 });
+let thiefGetsTiredCheckbox = document.getElementById("thiefGetsTiredCheckbox");
+thiefGetsTiredCheckbox.checked = persistentState.getsTired;
+thiefGetsTiredCheckbox.addEventListener("change", function() {
+  persistentState.thiefBehavior.getsTired = thiefGetsTiredCheckbox.checked;
+  saveState();
+  renderThiefGetsTiredUi();
+});
+let thiefGetsTiredMaxRunsSpinner = document.getElementById("thiefGetsTiredMaxRunsSpinner");
+thiefGetsTiredMaxRunsSpinner.value = persistentState.thiefBehavior.maxRuns;
+thiefGetsTiredMaxRunsSpinner.addEventListener("change", function() {
+  persistentState.thiefBehavior.maxRuns = thiefGetsTiredMaxRunsSpinner.value;
+  saveState();
+  renderThiefGetsTiredUi();
+});
+let thiefGetsTiredProbabilityIncreaseCheckbox = document.getElementById("thiefGetsTiredProbabilityIncreaseCheckbox");
+thiefGetsTiredProbabilityIncreaseCheckbox.checked = persistentState.thiefBehavior.probabilityIncreases;
+thiefGetsTiredProbabilityIncreaseCheckbox.addEventListener("change", function() {
+  persistentState.thiefBehavior.probabilityIncreases = thiefGetsTiredProbabilityIncreaseCheckbox.checked;
+  saveState();
+  renderThiefGetsTiredUi();
+});
+renderThiefGetsTiredUi();
 
 const gameBoardString = "" +
 "                               s      " + // 0
@@ -1067,11 +1096,12 @@ function doArrest(guess) {
     animations.push("Wrong");
   } else {
     animations.push("Correct");
-    if (Math.random() < persistentState.thiefBehavior.comply) {
+    if (Math.random() < getComplyProbability()) {
       animations.push("Comply");
       persistentState.game.arrested = true;
       saveState();
     } else {
+      persistentState.game.runCount++;
       animations.push("Run");
       let runFarther = Math.random() < persistentState.thiefBehavior.runFarther;
       for (let i = 0; i < 5 + runFarther - 1; i++) {
@@ -1080,10 +1110,39 @@ function doArrest(guess) {
       animations.push(...makeAMove());
       renderHistory();
       renderMap();
+      renderThiefGetsTiredUi();
       render();
     }
   }
   playAnimations(animations);
+}
+
+function getComplyProbability() {
+  if (persistentState.thiefBehavior.getsTired) {
+    let probability = getComplyProbabilities()[persistentState.game.runCount];
+    if (isNaN(probability)) {
+      // The settings were changed mid-game, and we're beyond the max run count.
+      probability = 1.0;
+    }
+    return probability;
+  } else {
+    return persistentState.thiefBehavior.comply;
+  }
+}
+function getComplyProbabilities() {
+  let result = [];
+  for (let i = 0; i < persistentState.thiefBehavior.maxRuns; i++) {
+    if (persistentState.thiefBehavior.probabilityIncreases) {
+      let step = (1.0 - persistentState.thiefBehavior.comply) / persistentState.thiefBehavior.maxRuns;
+      let probability = persistentState.thiefBehavior.comply + i * step;
+      probability = Math.round(100 * probability) / 100;
+      result.push(probability);
+    } else {
+      result.push(persistentState.thiefBehavior.comply);
+    }
+  }
+  result.push(1.0);
+  return result;
 }
 
 function getCurrentRoom() {
@@ -1341,6 +1400,32 @@ function renderHistory() {
     historyHtml += '<li>' + clue + '</li>';
   }
   historyUl.innerHTML = historyHtml;
+}
+
+function renderThiefGetsTiredUi() {
+  let group = document.getElementById("thiefGetsTiredGroup");
+  if (persistentState.thiefBehavior.getsTired) {
+    group.classList.remove("disabled");
+    thiefGetsTiredMaxRunsSpinner.disabled = false;
+    thiefGetsTiredProbabilityIncreaseCheckbox.disabled = false;
+  } else {
+    group.classList.add("disabled");
+    thiefGetsTiredMaxRunsSpinner.disabled = true;
+    thiefGetsTiredProbabilityIncreaseCheckbox.disabled = true;
+  }
+
+  let span = document.getElementById("complyProbabilitiesSpan");
+  let probabilities = getComplyProbabilities();
+  let percentages = probabilities.map(x => Math.round(x * 100) + "%");
+  let index = persistentState.game.runCount;
+  if (!persistentState.thiefBehavior.getsTired) {
+    index = 0;
+  } else if (index >= percentages.length) {
+    // The settings were changed mid-game, and we're beyond the max run count.
+    index = percentages.length - 1;
+  }
+  percentages[index] = "<b><u>" + percentages[index] + "</u></b>";
+  span.innerHTML = percentages.join(", ");
 }
 
 const tileSize = 20;
