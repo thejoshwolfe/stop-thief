@@ -10,6 +10,10 @@ http://wolfesoftware.com/stop-thief/
 
 # Version History
 
+## 1.3.1
+
+* Fix bug where it was impossible to type in the number spinner.
+
 ## 1.3
 
 * Added a house rule option to make the thief get tired after running too much.
