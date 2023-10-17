@@ -904,6 +904,9 @@ thiefGetsTiredMaxRunsSpinner.addEventListener("change", function() {
   saveState();
   renderThiefGetsTiredUi();
 });
+thiefGetsTiredMaxRunsSpinner.addEventListener("keydown", function(event) {
+  event.stopPropagation();
+});
 let thiefGetsTiredProbabilityIncreaseCheckbox = document.getElementById("thiefGetsTiredProbabilityIncreaseCheckbox");
 thiefGetsTiredProbabilityIncreaseCheckbox.checked = persistentState.thiefBehavior.probabilityIncreases;
 thiefGetsTiredProbabilityIncreaseCheckbox.addEventListener("change", function() {
